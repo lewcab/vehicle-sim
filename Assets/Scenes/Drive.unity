@@ -284,6 +284,7 @@ GameObject:
   - component: {fileID: 800105007}
   - component: {fileID: 800105008}
   - component: {fileID: 800105009}
+  - component: {fileID: 800105010}
   m_Layer: 0
   m_Name: Car
   m_TagString: Untagged
@@ -304,6 +305,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1752503704}
   - {fileID: 1449629123}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -319,8 +321,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b69b50bd890a552438c44cc43375e8fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  inSteering: {fileID: 4662868239858267369, guid: efa50fda48f3830479c32dc83bcd2f8b, type: 3}
+  inThrottle: {fileID: -6595490154481766122, guid: efa50fda48f3830479c32dc83bcd2f8b, type: 3}
+  inBrake: {fileID: 7630057002010082716, guid: efa50fda48f3830479c32dc83bcd2f8b, type: 3}
   car: {fileID: 800105007}
   wheelObj: {fileID: 698487993823452970, guid: a051f801fa1d0554387f87737139a6f0, type: 3}
+  driveType: 0
 --- !u!54 &800105009
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -348,6 +354,36 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &800105010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 800105006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Actions: {fileID: -944628639613478452, guid: efa50fda48f3830479c32dc83bcd2f8b, type: 3}
+  m_NotificationBehavior: 0
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents: []
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: Controller
+  m_DefaultActionMap: Car
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -359,8 +395,9 @@ GameObject:
   - component: {fileID: 963194228}
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
+  - component: {fileID: 963194229}
   m_Layer: 0
-  m_Name: Main Camera
+  m_Name: Car Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -433,13 +470,29 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.14286456, y: 0.3036846, z: -0.046112318, w: 0.9408714}
-  m_LocalPosition: {x: -3.03, y: 2.73, z: -4.29}
+  m_LocalRotation: {x: 0.12278779, y: 0.6963643, z: -0.12278779, w: 0.6963643}
+  m_LocalPosition: {x: -6, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 17.268, y: 35.777, z: 0}
+  m_Father: {fileID: 1752503704}
+  m_LocalEulerAnglesHint: {x: 20, y: 90, z: 0}
+--- !u!114 &963194229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d1116adf72b0ce458c4fe4d8dba8d1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  camSpace: {fileID: 1752503704}
+  camTransform: {fileID: 963194228}
+  inCamRotation: {fileID: 2431109613890325404, guid: efa50fda48f3830479c32dc83bcd2f8b, type: 3}
+  inCamHeight: {fileID: -4217718558890179389, guid: efa50fda48f3830479c32dc83bcd2f8b, type: 3}
 --- !u!43 &1030890974
 Mesh:
   m_ObjectHideFlags: 0
@@ -963,11 +1016,42 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1752503703
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1752503704}
+  m_Layer: 0
+  m_Name: Camera Space
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1752503704
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1752503703}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 963194228}
+  m_Father: {fileID: 800105007}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 963194228}
   - {fileID: 705507995}
   - {fileID: 1551341370}
   - {fileID: 800105007}
