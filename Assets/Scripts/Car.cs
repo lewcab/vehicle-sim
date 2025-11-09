@@ -2,15 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class Car : MonoBehaviour
 {
-    // Input Action References
-    public InputActionReference inSteering;
-    public InputActionReference inThrottle;
-    public InputActionReference inBrake;
-
     // Objects to create
     public Transform car;
     public Transform wheelObj;
@@ -58,15 +52,17 @@ public class Car : MonoBehaviour
 
     void Steer()
     {
-        float steering = inSteering.action.ReadValue<float>();
+        float steering = Input.GetAxis("L-Stick-X");
         steering *= 30f;
         _wheelFL.localRotation = Quaternion.Euler(0f, steering, 0f);
         _wheelFR.localRotation = Quaternion.Euler(0f, steering, 0f);
+
+        Debug.Log($"Steering input = {steering}");
     }
 
     void Throttle()
     {
-        float throttle = inThrottle.action.ReadValue<float>();
+        float throttle = Input.GetAxis("R-Trigger");
         throttle *= -40;
 
         if (driveType == DriveType.RWD)
@@ -87,12 +83,15 @@ public class Car : MonoBehaviour
             _wheelFL.Rotate(0f, 0f, throttle);
             _wheelFR.Rotate(0f, 0f, throttle);
         }
-        
+
+        Debug.Log($"Throttle input: {throttle}");
     }
 
     void Brake()
     {
-        float brake = inBrake.action.ReadValue<float>();
         // TODO: implement
+        float brake = Input.GetAxis("R-Trigger");
+
+        Debug.Log($"Brake input: {brake}");
     }
 }
