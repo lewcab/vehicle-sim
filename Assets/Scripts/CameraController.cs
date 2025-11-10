@@ -7,11 +7,6 @@ public class CameraController : MonoBehaviour
     public Transform camSpace;
     public Transform camTransform;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
     // Update is called once per frame
     void FixedUpdate()
@@ -23,6 +18,6 @@ public class CameraController : MonoBehaviour
             0f
         );
 
-        Debug.Log($"Camera input: {rotation}");
+        // Debug.Log($"Camera input: {rotation}");
     }
 }

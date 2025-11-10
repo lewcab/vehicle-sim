@@ -14,34 +14,33 @@ public class Car : MonoBehaviour
     public DriveType driveType;
 
     // Private
-    private Transform _wheelFL;
-    private Transform _wheelFR;
-    private Transform _wheelRL;
-    private Transform _wheelRR;
+    private Wheel[] wheels;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        float wheelWidthOffset = 1f;
-        float wheelLengthOffset = 1.75f;
-        float wheelHeightOffset = 0f;
-
-        _wheelFL = Instantiate(wheelObj);
-        _wheelFR = Instantiate(wheelObj);
-        _wheelRL = Instantiate(wheelObj);
-        _wheelRR = Instantiate(wheelObj);
-
-        _wheelFL.SetParent(car, false);
-        _wheelFR.SetParent(car, false);
-        _wheelRL.SetParent(car, false);
-        _wheelRR.SetParent(car, false);
-
-        _wheelFL.Translate(new Vector3(wheelLengthOffset, wheelHeightOffset, wheelWidthOffset));
-        _wheelFR.Translate(new Vector3(wheelLengthOffset, wheelHeightOffset, -wheelWidthOffset));
-        _wheelRL.Translate(new Vector3(-wheelLengthOffset, wheelHeightOffset, wheelWidthOffset));
-        _wheelRR.Translate(new Vector3(-wheelLengthOffset, wheelHeightOffset, -wheelWidthOffset));
+        SpawnWheels();
     }
+
+
+    void SpawnWheels()
+    {
+        wheels = new Wheel[4];
+        float wheelBaseW = 2f;
+        float wheelBaseL = 2.5f;
+
+        for (int i = 0; i < wheels.Length; i++)
+        {
+            Transform wheelTransform = Instantiate(wheelObj, car);
+            wheelTransform.name = $"W-{(IsFrontWheel(i) ? "F" : "R")}{(IsLeftWheel(i) ? "L" : "R")}";
+
+            Wheel wheel = wheelTransform.gameObject.AddComponent<Wheel>();
+            wheel.Initialize(wheelBaseW, wheelBaseL, IsFrontWheel(i), IsLeftWheel(i));
+            wheels[i] = wheel;
+        }
+    }
+
 
     void FixedUpdate()
     {
@@ -50,48 +49,55 @@ public class Car : MonoBehaviour
         Brake();
     }
 
-    void Steer()
+
+    private void Steer()
     {
         float steering = Input.GetAxis("L-Stick-X");
         steering *= 30f;
-        _wheelFL.localRotation = Quaternion.Euler(0f, steering, 0f);
-        _wheelFR.localRotation = Quaternion.Euler(0f, steering, 0f);
 
-        Debug.Log($"Steering input = {steering}");
+        for (int i = 0; i < wheels.Length; i++)
+        {
+            if (IsFrontWheel(i)) wheels[i].t.localRotation = Quaternion.Euler(0f, steering, 0f);
+        }
+
+        // Debug.Log($"Steering input = {steering}");
     }
 
-    void Throttle()
+
+    private void Throttle()
     {
         float throttle = Input.GetAxis("R-Trigger");
         throttle *= -40;
 
-        if (driveType == DriveType.RWD)
+        for (int i = 0; i < wheels.Length; i++)
         {
-            _wheelRL.Rotate(0f, 0f, throttle);
-            _wheelRR.Rotate(0f, 0f, throttle);
-        }
-        else if (driveType == DriveType.FWD)
-        {
-            // TODO: fix rotations
-            _wheelFL.Rotate(0f, 0f, throttle);
-            _wheelFR.Rotate(0f, 0f, throttle);
-        }
-        else
-        {
-            _wheelRL.Rotate(0f, 0f, throttle);
-            _wheelRR.Rotate(0f, 0f, throttle);
-            _wheelFL.Rotate(0f, 0f, throttle);
-            _wheelFR.Rotate(0f, 0f, throttle);
+            if (driveType == DriveType.AWD) wheels[i].t.Rotate(0f, 0f, throttle);
+            if (driveType == DriveType.RWD && !IsFrontWheel(i)) wheels[i].t.Rotate(0f, 0f, throttle);
+            if (driveType == DriveType.FWD && IsFrontWheel(i)) wheels[i].t.Rotate(0f, 0f, throttle);
+
         }
 
-        Debug.Log($"Throttle input: {throttle}");
+        // Debug.Log($"Throttle input: {throttle}");
     }
 
-    void Brake()
+
+    private void Brake()
     {
         // TODO: implement
         float brake = Input.GetAxis("R-Trigger");
 
-        Debug.Log($"Brake input: {brake}");
+        // Debug.Log($"Brake input: {brake}");
+    }
+
+
+    private bool IsFrontWheel(int wheel_i)
+    {
+        return wheel_i < 2;
+    }
+
+    
+    private bool IsLeftWheel(int wheel_i)
+    {
+        return wheel_i % 2 == 0; 
     }
 }
