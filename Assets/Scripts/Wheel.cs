@@ -7,7 +7,6 @@ public class Wheel : MonoBehaviour
 {
     public Transform t;
 
-    private Transform wheelObject;
     private bool isFront;
     private bool isLeft;
 

@@ -5,30 +5,44 @@ using UnityEngine;
 
 public class Car : MonoBehaviour
 {
+    // Debugging
+    public bool isLogInputs;
+
     // Objects to create
     public Transform car;
     public Transform wheelObj;
 
     // Customizable Parameters
+    public float length;
+    public float width;
     public enum DriveType { RWD, FWD, AWD }
     public DriveType driveType;
 
     // Private
+    private GameObject body;
     private Wheel[] wheels;
 
 
-    // Start is called before the first frame update
     void Start()
     {
+        InitCar();
         SpawnWheels();
+    }
+
+
+    void InitCar()
+    {
+        body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        body.name = "Body";
+        body.transform.SetParent(car, false);
+
+        body.transform.localScale = new(length, 0.1f, width);
     }
 
 
     void SpawnWheels()
     {
         wheels = new Wheel[4];
-        float wheelBaseW = 2f;
-        float wheelBaseL = 2.5f;
 
         for (int i = 0; i < wheels.Length; i++)
         {
@@ -36,7 +50,7 @@ public class Car : MonoBehaviour
             wheelTransform.name = $"W-{(IsFrontWheel(i) ? "F" : "R")}{(IsLeftWheel(i) ? "L" : "R")}";
 
             Wheel wheel = wheelTransform.gameObject.AddComponent<Wheel>();
-            wheel.Initialize(wheelBaseW, wheelBaseL, IsFrontWheel(i), IsLeftWheel(i));
+            wheel.Initialize(width, length, IsFrontWheel(i), IsLeftWheel(i));
             wheels[i] = wheel;
         }
     }
@@ -44,6 +58,7 @@ public class Car : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (isLogInputs) LogInputs();
         Steer();
         Throttle();
         Brake();
@@ -59,8 +74,6 @@ public class Car : MonoBehaviour
         {
             if (IsFrontWheel(i)) wheels[i].t.localRotation = Quaternion.Euler(0f, steering, 0f);
         }
-
-        // Debug.Log($"Steering input = {steering}");
     }
 
 
@@ -76,17 +89,13 @@ public class Car : MonoBehaviour
             if (driveType == DriveType.FWD && IsFrontWheel(i)) wheels[i].t.Rotate(0f, 0f, throttle);
 
         }
-
-        // Debug.Log($"Throttle input: {throttle}");
     }
 
 
     private void Brake()
     {
         // TODO: implement
-        float brake = Input.GetAxis("R-Trigger");
-
-        // Debug.Log($"Brake input: {brake}");
+        float brake = Input.GetAxis("L-Trigger");
     }
 
 
@@ -95,9 +104,18 @@ public class Car : MonoBehaviour
         return wheel_i < 2;
     }
 
-    
+
     private bool IsLeftWheel(int wheel_i)
     {
-        return wheel_i % 2 == 0; 
+        return wheel_i % 2 == 0;
+    }
+
+    private void LogInputs()
+    {
+        Debug.Log($"Inputs @ {Time.fixedTime}");
+        Debug.Log($"\tL-Stick-X: {Input.GetAxis("L-Stick-X")}");
+        Debug.Log($"\tR-Stick-X: {Input.GetAxis("R-Stick-X")}");
+        Debug.Log($"\tL-Trigger: {Input.GetAxis("L-Trigger")}");
+        Debug.Log($"\tR-Trigger: {Input.GetAxis("R-Trigger")}");
     }
 }
