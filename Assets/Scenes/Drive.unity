@@ -268,6 +268,7 @@ MonoBehaviour:
   length: 2.57
   width: 1.52
   driveType: 0
+  steeringAngle: 30
   suspensionHeight: 0.4
   suspensionOffset: 0.05
   tireWidth: 0.215

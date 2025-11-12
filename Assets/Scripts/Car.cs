@@ -23,6 +23,7 @@ public class Car : MonoBehaviour
     public DriveType driveType;
 
     // Wheel/Suspension Parameters
+    public float steeringAngle;
     public float suspensionHeight;
     public float suspensionOffset;
     public float tireWidth;
@@ -45,8 +46,8 @@ public class Car : MonoBehaviour
         car = GetComponent<Transform>();
         body = GameObject.CreatePrimitive(PrimitiveType.Cube);
         body.name = "Body";
-        body.transform.SetParent(car, false);
 
+        body.transform.SetParent(car, false);
         body.transform.localScale = new(length, 0.1f, width);
     }
 
@@ -78,6 +79,10 @@ public class Car : MonoBehaviour
     {
         if (isLogInputs) LogInputs();
         if (isRenderSuspension) RenderSuspension();
+        for (int i = 0; i < wheels.Length; i++)
+        {
+            wheels[i].Steer(Input.GetAxis("L-Stick-X"), steeringAngle);
+        }
     }
     
 
