@@ -3,20 +3,30 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
+[RequireComponent(typeof(Transform))]
 public class Car : MonoBehaviour
 {
     // Debugging
     public bool isLogInputs;
+    public bool isRenderSuspension;
 
-    // Objects to create
+    // References
     public Transform car;
-    public Transform wheelObj;
+
+    // Prefabs
+    public Transform wheelPrefab;
 
     // Customizable Parameters
     public float length;
     public float width;
     public enum DriveType { RWD, FWD, AWD }
     public DriveType driveType;
+
+    // Wheel/Suspension Parameters
+    public float suspensionHeight;
+    public float suspensionOffset;
+    public float tireWidth;
+    public float tireDiameter;
 
     // Private
     private GameObject body;
@@ -32,6 +42,7 @@ public class Car : MonoBehaviour
 
     void InitCar()
     {
+        car = GetComponent<Transform>();
         body = GameObject.CreatePrimitive(PrimitiveType.Cube);
         body.name = "Body";
         body.transform.SetParent(car, false);
@@ -46,11 +57,18 @@ public class Car : MonoBehaviour
 
         for (int i = 0; i < wheels.Length; i++)
         {
-            Transform wheelTransform = Instantiate(wheelObj, car);
-            wheelTransform.name = $"W-{(IsFrontWheel(i) ? "F" : "R")}{(IsLeftWheel(i) ? "L" : "R")}";
+            Transform wheelTransform = new GameObject().transform;
+            wheelTransform.SetParent(car, false);
+            wheelTransform.name = $"W-{(IsFrontWheel(i) ? "F" : "B")}{(IsLeftWheel(i) ? "L" : "R")}";
 
             Wheel wheel = wheelTransform.gameObject.AddComponent<Wheel>();
-            wheel.Initialize(width, length, IsFrontWheel(i), IsLeftWheel(i));
+            wheel.Initialize(
+                wheelPrefab,
+                IsFrontWheel(i), IsLeftWheel(i),
+                width, length,
+                suspensionHeight, suspensionOffset,
+                tireWidth, tireDiameter
+            );
             wheels[i] = wheel;
         }
     }
@@ -59,43 +77,20 @@ public class Car : MonoBehaviour
     void FixedUpdate()
     {
         if (isLogInputs) LogInputs();
-        Steer();
-        Throttle();
-        Brake();
+        if (isRenderSuspension) RenderSuspension();
     }
+    
 
-
-    private void Steer()
+    private void RenderSuspension()
     {
-        float steering = Input.GetAxis("L-Stick-X");
-        steering *= 30f;
-
         for (int i = 0; i < wheels.Length; i++)
         {
-            if (IsFrontWheel(i)) wheels[i].t.localRotation = Quaternion.Euler(0f, steering, 0f);
+            Debug.DrawLine(
+                wheels[i].suspensionBase + wheels[i].wheelSpace.position,
+                wheels[i].suspensionEnd + wheels[i].wheelSpace.position,
+                Color.red
+            );
         }
-    }
-
-
-    private void Throttle()
-    {
-        float throttle = Input.GetAxis("R-Trigger");
-        throttle *= -40;
-
-        for (int i = 0; i < wheels.Length; i++)
-        {
-            if (driveType == DriveType.AWD) wheels[i].t.Rotate(0f, 0f, throttle);
-            if (driveType == DriveType.RWD && !IsFrontWheel(i)) wheels[i].t.Rotate(0f, 0f, throttle);
-            if (driveType == DriveType.FWD && IsFrontWheel(i)) wheels[i].t.Rotate(0f, 0f, throttle);
-
-        }
-    }
-
-
-    private void Brake()
-    {
-        // TODO: implement
-        float brake = Input.GetAxis("L-Trigger");
     }
 
 

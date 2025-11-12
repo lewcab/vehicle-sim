@@ -226,7 +226,6 @@ GameObject:
   m_Component:
   - component: {fileID: 800105007}
   - component: {fileID: 800105008}
-  - component: {fileID: 800105010}
   m_Layer: 0
   m_Name: Car
   m_TagString: Untagged
@@ -263,23 +262,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isLogInputs: 1
+  isRenderSuspension: 1
   car: {fileID: 800105007}
-  wheelObj: {fileID: 698487993823452970, guid: a051f801fa1d0554387f87737139a6f0, type: 3}
-  length: 2.75
-  width: 2
+  wheelPrefab: {fileID: 698487993823452970, guid: a051f801fa1d0554387f87737139a6f0, type: 3}
+  length: 2.57
+  width: 1.52
   driveType: 0
---- !u!114 &800105010
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 800105006}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  suspensionHeight: 0.4
+  suspensionOffset: 0.05
+  tireWidth: 0.215
+  tireDiameter: 0.625
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -567,7 +559,7 @@ GameObject:
   - component: {fileID: 1551341366}
   - component: {fileID: 1551341365}
   m_Layer: 0
-  m_Name: Floor
+  m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

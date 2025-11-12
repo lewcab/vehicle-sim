@@ -17,7 +17,5 @@ public class CameraController : MonoBehaviour
             rotation * Time.deltaTime * 100f,
             0f
         );
-
-        // Debug.Log($"Camera input: {rotation}");
     }
 }
