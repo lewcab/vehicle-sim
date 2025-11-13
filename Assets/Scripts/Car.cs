@@ -38,6 +38,7 @@ public class Car : MonoBehaviour
     {
         InitCar();
         SpawnWheels();
+        InitPhysics();
     }
 
 
@@ -75,6 +76,22 @@ public class Car : MonoBehaviour
     }
 
 
+    void InitPhysics()
+    {
+        // Add Rigidbody to the car body
+        Rigidbody carRb = body.AddComponent<Rigidbody>();
+        carRb.mass = 1000f; // TODO: make configurable
+        carRb.drag = 0.05f;
+        carRb.angularDrag = 0.1f;
+
+        // Initialize wheel physics
+        for (int i = 0; i < wheels.Length; i++)
+        {
+            wheels[i].InitPhysics();
+        }
+    }
+
+
     void FixedUpdate()
     {
         if (isLogInputs) LogInputs();
@@ -82,6 +99,10 @@ public class Car : MonoBehaviour
         for (int i = 0; i < wheels.Length; i++)
         {
             wheels[i].Steer(Input.GetAxis("L-Stick-X"), steeringAngle);
+            wheels[i].Throttle(
+                Input.GetAxis("R-Trigger"),
+                driveType
+            );
         }
     }
     

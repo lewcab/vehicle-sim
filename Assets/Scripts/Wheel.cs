@@ -56,7 +56,7 @@ public class Wheel : MonoBehaviour
         suspensionEnd = Vector3.zero;
     }
 
-    
+
     void InitializeWheelObj(Transform wheelPrefab)
     {
         wheelObj = Instantiate(wheelPrefab, wheelSpace);
@@ -66,7 +66,28 @@ public class Wheel : MonoBehaviour
             Quaternion.identity
         );
         wheelObj.localScale = new Vector3(tireD, tireD, tireW);
+    }
+    
 
+    public void InitPhysics()
+    {
+        // Add Rigidbody to the wheel object
+        Rigidbody rb = wheelObj.gameObject.AddComponent<Rigidbody>();
+        rb.mass = 10f; // Example mass value
+        rb.drag = 0.1f; // Example drag value
+        rb.angularDrag = 0.05f; // Example angular drag value
+
+        // Add Collider to the tire object
+        MeshCollider tireCollider = wheelObj.Find("Tire").gameObject.AddComponent<MeshCollider>();
+        tireCollider.convex = true;
+        tireCollider.sharedMesh = wheelObj.Find("Tire").GetComponent<MeshFilter>().sharedMesh;
+
+        // Add Physics Material to the tire collider
+        PhysicMaterial tireMaterial = new PhysicMaterial();
+        tireMaterial.dynamicFriction = 0.8f;
+        tireMaterial.staticFriction = 0.9f;
+        tireMaterial.bounciness = 0.1f;
+        tireCollider.material = tireMaterial;
     }
 
 
@@ -85,9 +106,16 @@ public class Wheel : MonoBehaviour
     /// Apply throttle to the wheel
     /// </summary>
     /// <param name="input">Trigger input in range [0, 1]</param>
-    public void Throttle(float input)
+    public void Throttle(float input, Car.DriveType driveType)
     {
-        // TODO: implement
+        Quaternion rotation = Quaternion.Euler(0, 0, input * Time.deltaTime * -360f);
+
+        if (
+            driveType == Car.DriveType.FWD && !isFront ||
+            driveType == Car.DriveType.RWD && isFront
+        ) return;
+
+        wheelObj.localRotation *= rotation;
     }
 
 
