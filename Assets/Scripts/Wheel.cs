@@ -5,8 +5,10 @@ using UnityEngine;
 [RequireComponent(typeof(Transform))]
 public class Wheel : MonoBehaviour
 {
-    public Transform wheelSpace;
-    public Transform wheelObj;
+    public Transform csWheel;        // The root transform for the wheel assembly
+    public Transform csSteering;     // The transform that handles steering rotation
+    public Transform csRolling;      // The transform that handles tire rolling rotation
+    public Transform wheelObj;          // The visual/physical representation of the wheel
 
     public Vector3 suspensionBase;
     public Vector3 suspensionEnd;
@@ -28,7 +30,7 @@ public class Wheel : MonoBehaviour
         float tireWidth, float tireDiameter
     )
     {
-        wheelSpace = GetComponent<Transform>();
+        csWheel = GetComponent<Transform>();
 
         isFront = front;
         isLeft = left;
@@ -41,12 +43,20 @@ public class Wheel : MonoBehaviour
         tireW = tireWidth;
         tireD = tireDiameter;
 
-        // Initialize wheelSpace, given by the xOffset and yOffset
-        wheelSpace = GetComponent<Transform>();
-        wheelSpace.SetLocalPositionAndRotation(
+        // Initialize CS-Wheel, given by the xOffset and yOffset
+        csWheel = GetComponent<Transform>();
+        csWheel.SetLocalPositionAndRotation(
             new Vector3(xOffset, 0, zOffset),
             Quaternion.identity
         );
+
+        // Initialize CS-Steering as a child of wheelSpace
+        csSteering = new GameObject("CS-Steering").transform;
+        csSteering.SetParent(csWheel, false);
+
+        // Initialize CS-Rolling as a child of steeringSpace
+        csRolling = new GameObject("CS-Rolling").transform;
+        csRolling.SetParent(csSteering, false);
 
         // Initialize wheelObj, the pysical wheel
         InitializeWheelObj(wheelPrefab);
@@ -59,7 +69,7 @@ public class Wheel : MonoBehaviour
 
     void InitializeWheelObj(Transform wheelPrefab)
     {
-        wheelObj = Instantiate(wheelPrefab, wheelSpace);
+        wheelObj = Instantiate(wheelPrefab, csRolling);
         wheelObj.name = "Wheel";
         wheelObj.SetLocalPositionAndRotation(
             new Vector3(0, 0, tireW / 2 * (isLeft ? 1 : -1)),
@@ -69,6 +79,9 @@ public class Wheel : MonoBehaviour
     }
     
 
+    /// <summary>
+    /// Initialize physics components for the wheel
+    /// </summary>
     public void InitPhysics()
     {
         // Add Rigidbody to the wheel object
@@ -84,10 +97,125 @@ public class Wheel : MonoBehaviour
 
         // Add Physics Material to the tire collider
         PhysicMaterial tireMaterial = new PhysicMaterial();
-        tireMaterial.dynamicFriction = 0.8f;
-        tireMaterial.staticFriction = 0.9f;
-        tireMaterial.bounciness = 0.1f;
+        tireMaterial.dynamicFriction = 0.5f;
+        tireMaterial.staticFriction = 0.6f;
+        tireMaterial.bounciness = 0.01f;
         tireCollider.material = tireMaterial;
+    }
+
+
+
+    /// <summary>
+    /// Setup joints connecting the wheel to the car
+    /// </summary>
+    /// <param name="car">Rigidbody of car</param>
+    public void InitJoints(Rigidbody car)
+    {
+        JoinCSWheelToCar(car);
+        JoinCSSteeringToCSWheel();
+        JoinCSRollingToCSSteering();
+        JoinWheelObjToCSRolling();
+    }
+
+
+    private void JoinCSWheelToCar(Rigidbody car)
+    {
+        // Primary joint: Connect csWheel to the car
+        ConfigurableJoint wheelJoint = csWheel.gameObject.AddComponent<ConfigurableJoint>();
+        wheelJoint.connectedBody = car;
+
+        // Set the anchor point of the joint (relative to csWheel)
+        wheelJoint.autoConfigureConnectedAnchor = true;
+        wheelJoint.anchor = Vector3.zero;
+
+        // Lock all linear motion
+        wheelJoint.xMotion = ConfigurableJointMotion.Locked;
+        wheelJoint.yMotion = ConfigurableJointMotion.Locked;
+        wheelJoint.zMotion = ConfigurableJointMotion.Locked;
+
+        // Allow no angular motion for csWheel
+        wheelJoint.angularXMotion = ConfigurableJointMotion.Locked;
+        wheelJoint.angularYMotion = ConfigurableJointMotion.Locked;
+        wheelJoint.angularZMotion = ConfigurableJointMotion.Locked;
+    }
+
+
+    private void JoinCSSteeringToCSWheel()
+    {
+        // Joint: Connect csSteering to csWheel
+        ConfigurableJoint steeringJoint = csSteering.gameObject.AddComponent<ConfigurableJoint>();
+        steeringJoint.connectedBody = csWheel.GetComponent<Rigidbody>();
+
+        steeringJoint.autoConfigureConnectedAnchor = true;
+        steeringJoint.anchor = Vector3.zero;
+
+        // Lock all linear motion
+        steeringJoint.xMotion = ConfigurableJointMotion.Locked;
+        steeringJoint.yMotion = ConfigurableJointMotion.Locked;
+        steeringJoint.zMotion = ConfigurableJointMotion.Locked;
+
+        // Allow angularYMotion for steering if this is a front wheel
+        steeringJoint.angularXMotion = ConfigurableJointMotion.Locked;
+        steeringJoint.angularYMotion = isFront ? ConfigurableJointMotion.Free : ConfigurableJointMotion.Locked;
+        steeringJoint.angularZMotion = ConfigurableJointMotion.Locked;
+    }
+
+
+    
+    private void JoinCSRollingToCSSteering()
+    {
+        // Joint: Connect csRolling to csSteering
+        ConfigurableJoint rollingJoint = csRolling.gameObject.AddComponent<ConfigurableJoint>();
+        rollingJoint.connectedBody = csSteering.GetComponent<Rigidbody>();
+
+        rollingJoint.autoConfigureConnectedAnchor = true;
+        rollingJoint.anchor = Vector3.zero;
+
+        // Lock all linear motion
+        rollingJoint.xMotion = ConfigurableJointMotion.Locked;
+        rollingJoint.yMotion = ConfigurableJointMotion.Locked;
+        rollingJoint.zMotion = ConfigurableJointMotion.Locked;
+
+        // Allow angularZMotion for rolling
+        rollingJoint.angularXMotion = ConfigurableJointMotion.Locked;
+        rollingJoint.angularYMotion = ConfigurableJointMotion.Locked;
+        rollingJoint.angularZMotion = ConfigurableJointMotion.Free;
+    }
+
+
+    
+    private void JoinWheelObjToCSRolling()
+    {
+        // Joint: Connect wheelObj to csRolling
+        ConfigurableJoint wheelObjJoint = wheelObj.gameObject.AddComponent<ConfigurableJoint>();
+        wheelObjJoint.connectedBody = csRolling.GetComponent<Rigidbody>();
+
+        wheelObjJoint.autoConfigureConnectedAnchor = true;
+        wheelObjJoint.anchor = Vector3.zero;
+
+        // Lock all linear motion
+        wheelObjJoint.xMotion = ConfigurableJointMotion.Locked;
+        wheelObjJoint.yMotion = ConfigurableJointMotion.Locked;
+        wheelObjJoint.zMotion = ConfigurableJointMotion.Locked;
+
+        // Lock all angular motion for the wheel object
+        wheelObjJoint.angularXMotion = ConfigurableJointMotion.Locked;
+        wheelObjJoint.angularYMotion = ConfigurableJointMotion.Locked;
+        wheelObjJoint.angularZMotion = ConfigurableJointMotion.Locked;
+    }
+
+
+    public void RenderSuspension()
+    {
+        // Get the current world position of the wheel's Rigidbody
+        Rigidbody rb = csWheel.GetComponent<Rigidbody>();
+
+        // Calculate the suspension points in world space
+        Vector3 worldSuspensionBase = rb.position + rb.transform.TransformVector(suspensionBase);
+        Vector3 worldSuspensionEnd = rb.position + rb.transform.TransformVector(suspensionEnd);
+
+        // Draw the suspension line
+        Debug.DrawLine(worldSuspensionBase, worldSuspensionEnd, Color.red);
     }
 
 
@@ -98,7 +226,7 @@ public class Wheel : MonoBehaviour
     public void Steer(float input, float maxAngle)
     {
         float angle = input * maxAngle; // Max steer angle of 30 degrees
-        if (isFront) wheelSpace.localRotation = Quaternion.Euler(0, angle, 0);
+        if (isFront) csSteering.localRotation = Quaternion.Euler(0, angle, 0);
     }
 
 
@@ -106,16 +234,19 @@ public class Wheel : MonoBehaviour
     /// Apply throttle to the wheel
     /// </summary>
     /// <param name="input">Trigger input in range [0, 1]</param>
+    /// <param name="driveType">The drive type of the car (FWD, RWD, AWD)</param>
     public void Throttle(float input, Car.DriveType driveType)
     {
-        Quaternion rotation = Quaternion.Euler(0, 0, input * Time.deltaTime * -360f);
-
         if (
             driveType == Car.DriveType.FWD && !isFront ||
             driveType == Car.DriveType.RWD && isFront
         ) return;
 
-        wheelObj.localRotation *= rotation;
+        float maxTorque = 10000f;
+        float torque = input * maxTorque;
+
+        Rigidbody rb = wheelObj.GetComponent<Rigidbody>();
+        rb.AddTorque(wheelObj.transform.forward * -torque);
     }
 
 
@@ -125,6 +256,13 @@ public class Wheel : MonoBehaviour
     /// <param name="input">Trigger input in range [0, 1]</param>
     public void Brake(float input)
     {
-        // TODO: implement
+        float maxBrakeTorque = 1500f;
+        Rigidbody rb = wheelObj.GetComponent<Rigidbody>();
+        Vector3 localAngularVelocity = wheelObj.transform.InverseTransformDirection(rb.angularVelocity);
+        if (localAngularVelocity.z != 0)
+        {
+            float brakeTorque = input * maxBrakeTorque * -Mathf.Sign(localAngularVelocity.z);
+            rb.AddTorque(wheelObj.transform.forward * brakeTorque);
+        }
     }
 }

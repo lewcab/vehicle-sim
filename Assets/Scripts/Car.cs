@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [RequireComponent(typeof(Transform))]
@@ -9,9 +8,6 @@ public class Car : MonoBehaviour
     // Debugging
     public bool isLogInputs;
     public bool isRenderSuspension;
-
-    // References
-    public Transform car;
 
     // Prefabs
     public Transform wheelPrefab;
@@ -30,6 +26,7 @@ public class Car : MonoBehaviour
     public float tireDiameter;
 
     // Private
+    private Transform car;
     private GameObject body;
     private Wheel[] wheels;
 
@@ -39,6 +36,10 @@ public class Car : MonoBehaviour
         InitCar();
         SpawnWheels();
         InitPhysics();
+        for (int i = 0; i < wheels.Length; i++)
+        {
+            wheels[i].InitJoints(car.GetComponent<Rigidbody>());
+        }
     }
 
 
@@ -60,8 +61,8 @@ public class Car : MonoBehaviour
         for (int i = 0; i < wheels.Length; i++)
         {
             Transform wheelTransform = new GameObject().transform;
-            wheelTransform.SetParent(car, false);
-            wheelTransform.name = $"W-{(IsFrontWheel(i) ? "F" : "B")}{(IsLeftWheel(i) ? "L" : "R")}";
+            wheelTransform.SetParent(car.transform, false);
+            wheelTransform.name = $"CS-{(IsFrontWheel(i) ? "F" : "B")}{(IsLeftWheel(i) ? "L" : "R")}";
 
             Wheel wheel = wheelTransform.gameObject.AddComponent<Wheel>();
             wheel.Initialize(
@@ -79,10 +80,11 @@ public class Car : MonoBehaviour
     void InitPhysics()
     {
         // Add Rigidbody to the car body
-        Rigidbody carRb = body.AddComponent<Rigidbody>();
-        carRb.mass = 1000f; // TODO: make configurable
+        Rigidbody carRb = car.gameObject.AddComponent<Rigidbody>();
+        carRb.mass = 10f; // TODO: make configurable
         carRb.drag = 0.05f;
         carRb.angularDrag = 0.1f;
+        Destroy(body.GetComponent<BoxCollider>());
 
         // Initialize wheel physics
         for (int i = 0; i < wheels.Length; i++)
@@ -95,30 +97,15 @@ public class Car : MonoBehaviour
     void FixedUpdate()
     {
         if (isLogInputs) LogInputs();
-        if (isRenderSuspension) RenderSuspension();
+        if (isRenderSuspension) foreach (var wheel in wheels) wheel.RenderSuspension();
         for (int i = 0; i < wheels.Length; i++)
         {
             wheels[i].Steer(Input.GetAxis("L-Stick-X"), steeringAngle);
-            wheels[i].Throttle(
-                Input.GetAxis("R-Trigger"),
-                driveType
-            );
+            wheels[i].Throttle(Input.GetAxis("R-Trigger"), driveType);
+            wheels[i].Brake(Input.GetAxis("L-Trigger"));
         }
     }
     
-
-    private void RenderSuspension()
-    {
-        for (int i = 0; i < wheels.Length; i++)
-        {
-            Debug.DrawLine(
-                wheels[i].suspensionBase + wheels[i].wheelSpace.position,
-                wheels[i].suspensionEnd + wheels[i].wheelSpace.position,
-                Color.red
-            );
-        }
-    }
-
 
     private bool IsFrontWheel(int wheel_i)
     {

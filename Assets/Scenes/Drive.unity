@@ -261,13 +261,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b69b50bd890a552438c44cc43375e8fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isLogInputs: 0
+  isLogInputs: 1
   isRenderSuspension: 1
-  car: {fileID: 800105007}
   wheelPrefab: {fileID: 698487993823452970, guid: a051f801fa1d0554387f87737139a6f0, type: 3}
   length: 2.57
   width: 1.52
-  driveType: 2
+  driveType: 0
   steeringAngle: 30
   suspensionHeight: 0.4
   suspensionOffset: 0.05
