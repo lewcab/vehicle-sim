@@ -187,21 +187,11 @@ public class Wheel : MonoBehaviour
     private void JoinWheelObjToCSRolling()
     {
         // Joint: Connect wheelObj to csRolling
-        ConfigurableJoint wheelObjJoint = wheelObj.gameObject.AddComponent<ConfigurableJoint>();
+        FixedJoint wheelObjJoint = wheelObj.gameObject.AddComponent<FixedJoint>();
         wheelObjJoint.connectedBody = csRolling.GetComponent<Rigidbody>();
 
         wheelObjJoint.autoConfigureConnectedAnchor = true;
         wheelObjJoint.anchor = Vector3.zero;
-
-        // Lock all linear motion
-        wheelObjJoint.xMotion = ConfigurableJointMotion.Locked;
-        wheelObjJoint.yMotion = ConfigurableJointMotion.Locked;
-        wheelObjJoint.zMotion = ConfigurableJointMotion.Locked;
-
-        // Lock all angular motion for the wheel object
-        wheelObjJoint.angularXMotion = ConfigurableJointMotion.Locked;
-        wheelObjJoint.angularYMotion = ConfigurableJointMotion.Locked;
-        wheelObjJoint.angularZMotion = ConfigurableJointMotion.Locked;
     }
 
 
