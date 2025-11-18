@@ -8,6 +8,7 @@ public class Car : MonoBehaviour
     // Debugging
     public bool isLogInputs;
     public bool isRenderSuspension;
+    public bool isKeyboardControl;
 
     // Prefabs
     public Transform wheelPrefab;
@@ -98,11 +99,37 @@ public class Car : MonoBehaviour
     {
         if (isLogInputs) LogInputs();
         if (isRenderSuspension) foreach (var wheel in wheels) wheel.RenderSuspension();
+        HandleInput();
+    }
+
+
+    private void HandleInput()
+    {
+        float steerInput;
+        float throttleInput;
+        float brakeInput;
+
+        if (isKeyboardControl)
+        {
+            steerInput = 0f;
+            if (Input.GetKey(KeyCode.A)) steerInput = -1f;
+            else if (Input.GetKey(KeyCode.D)) steerInput = 1f;
+
+            throttleInput = Input.GetKey(KeyCode.W) ? 1f : 0f;
+            brakeInput = Input.GetKey(KeyCode.S) ? 1f : 0f;
+        }
+        else
+        {
+            steerInput = Input.GetAxis("L-Stick-X");
+            throttleInput = Input.GetAxis("R-Trigger");
+            brakeInput = Input.GetAxis("L-Trigger");
+        }
+
         for (int i = 0; i < wheels.Length; i++)
         {
-            wheels[i].Steer(Input.GetAxis("L-Stick-X"), steeringAngle);
-            wheels[i].Throttle(Input.GetAxis("R-Trigger"), driveType);
-            wheels[i].Brake(Input.GetAxis("L-Trigger"));
+            wheels[i].Steer(steerInput, steeringAngle);
+            wheels[i].Throttle(throttleInput, driveType);
+            wheels[i].Brake(brakeInput);
         }
     }
     
@@ -117,6 +144,7 @@ public class Car : MonoBehaviour
     {
         return wheel_i % 2 == 0;
     }
+
 
     private void LogInputs()
     {
