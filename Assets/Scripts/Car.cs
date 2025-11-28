@@ -16,6 +16,7 @@ public class Car : MonoBehaviour
     // Customizable Parameters
     public float length;
     public float width;
+    public float carWeight;
     public enum DriveType { RWD, FWD, AWD }
     public DriveType driveType;
 
@@ -53,8 +54,10 @@ public class Car : MonoBehaviour
         body = GameObject.CreatePrimitive(PrimitiveType.Cube);
         body.name = "Body";
 
+        float bodyThickness = 0.05f;
         body.transform.SetParent(car, false);
-        body.transform.localScale = new(length, 0.1f, width);
+        body.transform.localScale = new(length, bodyThickness, width);
+        body.transform.localPosition = new Vector3(0f, (bodyThickness/2) - suspensionDepth, 0f);
     }
 
 
@@ -86,7 +89,7 @@ public class Car : MonoBehaviour
     {
         // Add Rigidbody to the car body
         Rigidbody carRb = car.gameObject.AddComponent<Rigidbody>();
-        carRb.mass = 10f; // TODO: make configurable
+        carRb.mass = carWeight; // TODO: make configurable
         carRb.drag = 0.05f;
         carRb.angularDrag = 0.1f;
         Destroy(body.GetComponent<BoxCollider>());

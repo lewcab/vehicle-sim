@@ -6,6 +6,7 @@ using UnityEngine;
 public class Wheel : MonoBehaviour
 {
     private Transform csWheel;      // The root transform for the wheel assembly
+    private Transform csSuspension; // The transform that handles suspension movement
     private Transform csSteering;   // The transform that handles steering rotation
     private Transform csRolling;    // The transform that handles tire rolling rotation
     private Transform wheelObj;     // The visual/physical representation of the wheel
@@ -55,7 +56,7 @@ public class Wheel : MonoBehaviour
 
         // Initialize suspension points
         suspensionBase = new Vector3(0, suspDepth, Mathf.Tan(suspAngle * Mathf.Deg2Rad) * suspDepth);
-        suspensionEnd = suspensionBase + Quaternion.Euler(suspAngle, 0, 0) * Vector3.down * suspRL;
+        suspensionEnd = Quaternion.Euler(suspAngle, 0, 0) * Vector3.down * suspRL;
 
         // Initialize CS-Wheel, given by the xOffset and yOffset
         csWheel = GetComponent<Transform>();
@@ -64,10 +65,14 @@ public class Wheel : MonoBehaviour
             Quaternion.identity
         );
 
+        // Initialize CS-Suspension as a child of csWheel
+        csSuspension = new GameObject("CS-Suspension").transform;
+        csSuspension.SetParent(csWheel, false);
+        csSuspension.localPosition = suspensionEnd;
+
         // Initialize CS-Steering as a child of wheelSpace
         csSteering = new GameObject("CS-Steering").transform;
-        csSteering.SetParent(csWheel, false);
-        csSteering.localPosition = suspensionEnd;
+        csSteering.SetParent(csSuspension, false);
 
         // Initialize CS-Rolling as a child of steeringSpace
         csRolling = new GameObject("CS-Rolling").transform;
@@ -97,9 +102,6 @@ public class Wheel : MonoBehaviour
     {
         // Add Rigidbody to the wheel object
         Rigidbody rb = wheelObj.gameObject.AddComponent<Rigidbody>();
-        rb.mass = 10f; // Example mass value
-        rb.drag = 0.1f; // Example drag value
-        rb.angularDrag = 0.05f; // Example angular drag value
 
         // Add Collider to the tire object
         MeshCollider tireCollider = wheelObj.Find("Tire").gameObject.AddComponent<MeshCollider>();
@@ -123,7 +125,8 @@ public class Wheel : MonoBehaviour
     public void InitJoints(Rigidbody car)
     {
         JoinCSWheelToCar(car);
-        JoinCSSteeringToCSWheel();
+        JoinCSSuspensionToCSWheel();
+        JoinCSSteeringToCSSuspension();
         JoinCSRollingToCSSteering();
         JoinWheelObjToCSRolling();
     }
@@ -151,11 +154,31 @@ public class Wheel : MonoBehaviour
     }
 
 
-    private void JoinCSSteeringToCSWheel()
+    private void JoinCSSuspensionToCSWheel()
     {
-        // Joint: Connect csSteering to csWheel
+        // Joint: Connect csSuspension to csWheel
+        ConfigurableJoint suspensionJoint = csSuspension.gameObject.AddComponent<ConfigurableJoint>();
+        suspensionJoint.connectedBody = csWheel.GetComponent<Rigidbody>();
+
+        suspensionJoint.autoConfigureConnectedAnchor = true;
+        suspensionJoint.anchor = Vector3.zero;
+
+        // Lock all linear motion
+        suspensionJoint.xMotion = ConfigurableJointMotion.Locked;
+        suspensionJoint.yMotion = ConfigurableJointMotion.Locked;
+        suspensionJoint.zMotion = ConfigurableJointMotion.Locked;
+
+        // Allow no angular motion for csSuspension
+        suspensionJoint.angularXMotion = ConfigurableJointMotion.Locked;
+        suspensionJoint.angularYMotion = ConfigurableJointMotion.Locked;
+        suspensionJoint.angularZMotion = ConfigurableJointMotion.Locked;
+    }
+
+    private void JoinCSSteeringToCSSuspension()
+    {
+        // Joint: Connect csSteering to csSuspension
         ConfigurableJoint steeringJoint = csSteering.gameObject.AddComponent<ConfigurableJoint>();
-        steeringJoint.connectedBody = csWheel.GetComponent<Rigidbody>();
+        steeringJoint.connectedBody = csSuspension.GetComponent<Rigidbody>();
 
         steeringJoint.autoConfigureConnectedAnchor = true;
         steeringJoint.anchor = Vector3.zero;
@@ -206,15 +229,7 @@ public class Wheel : MonoBehaviour
 
     public void RenderSuspension()
     {
-        // Get the current world position of the wheel's Rigidbody
-        Rigidbody rb = csWheel.GetComponent<Rigidbody>();
-
-        // Calculate the suspension points in world space
-        Vector3 worldSuspensionBase = rb.position + rb.transform.TransformVector(suspensionBase);
-        Vector3 worldSuspensionEnd = rb.position + rb.transform.TransformVector(suspensionEnd);
-
-        // Draw the suspension line
-        Debug.DrawLine(worldSuspensionBase, worldSuspensionEnd, Color.red);
+        Debug.DrawLine(csWheel.position, csSuspension.position, Color.red);
     }
 
 
