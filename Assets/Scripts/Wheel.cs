@@ -5,19 +5,24 @@ using UnityEngine;
 [RequireComponent(typeof(Transform))]
 public class Wheel : MonoBehaviour
 {
-    public Transform csWheel;        // The root transform for the wheel assembly
-    public Transform csSteering;     // The transform that handles steering rotation
-    public Transform csRolling;      // The transform that handles tire rolling rotation
-    public Transform wheelObj;          // The visual/physical representation of the wheel
+    private Transform csWheel;      // The root transform for the wheel assembly
+    private Transform csSteering;   // The transform that handles steering rotation
+    private Transform csRolling;    // The transform that handles tire rolling rotation
+    private Transform wheelObj;     // The visual/physical representation of the wheel
+    private Rigidbody carRB;        // The RB of the car's body
 
-    public Vector3 suspensionBase;
-    public Vector3 suspensionEnd;
+    private Vector3 suspensionBase;
+    private Vector3 suspensionEnd;
 
     private bool isFront;
     private bool isLeft;
 
-    private float suspH;
-    private float suspW;
+    private float suspDepth;    // suspension height
+    private float suspAngle;    // suspension offset
+    private float suspRL;       // suspension resting length
+    private float suspK;        // suspension spring coefficient
+    private float suspD;        // suspension damping coefficient
+
     private float tireW;
     private float tireD;
 
@@ -26,7 +31,8 @@ public class Wheel : MonoBehaviour
         Transform wheelPrefab,
         bool front, bool left,
         float carWidth, float carLength,
-        float suspensionHeight, float suspensionOffset,
+        float suspensionHeight, float suspensionAngle, float suspensionRestLength,
+        float suspensionSpringCoefficient, float suspensionDampingCoefficient,
         float tireWidth, float tireDiameter
     )
     {
@@ -35,13 +41,21 @@ public class Wheel : MonoBehaviour
         isFront = front;
         isLeft = left;
 
-        float xOffset = carLength / 2 * (isFront ? 1 : -1);
-        float zOffset = carWidth / 2 * (isLeft ? 1 : -1);
+        float xOffset = carLength / 2f * (isFront ? 1f : -1f);
+        float zOffset = carWidth / 2f * (isLeft ? 1f : -1f);
 
-        suspH = suspensionHeight;
-        suspW = suspensionOffset;
+        suspDepth = suspensionHeight;
+        suspAngle = suspensionAngle * (isLeft ? -1f : 1f);
+        suspRL = suspensionRestLength;
+        suspK = suspensionSpringCoefficient;
+        suspD = suspensionDampingCoefficient;
+
         tireW = tireWidth;
         tireD = tireDiameter;
+
+        // Initialize suspension points
+        suspensionBase = new Vector3(0, suspDepth, Mathf.Tan(suspAngle * Mathf.Deg2Rad) * suspDepth);
+        suspensionEnd = suspensionBase + Quaternion.Euler(suspAngle, 0, 0) * Vector3.down * suspRL;
 
         // Initialize CS-Wheel, given by the xOffset and yOffset
         csWheel = GetComponent<Transform>();
@@ -60,10 +74,6 @@ public class Wheel : MonoBehaviour
 
         // Initialize wheelObj, the pysical wheel
         InitializeWheelObj(wheelPrefab);
-
-        // Initialize suspension points
-        suspensionBase = new Vector3(0, suspH, suspW * (isLeft ? -1 : 1));
-        suspensionEnd = Vector3.zero;
     }
 
 

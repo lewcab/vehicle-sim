@@ -19,14 +19,17 @@ public class Car : MonoBehaviour
     public enum DriveType { RWD, FWD, AWD }
     public DriveType driveType;
 
-    // Wheel/Suspension Parameters
+    // Wheel & Suspension Parameters
     public float steeringAngle;
-    public float suspensionHeight;
-    public float suspensionOffset;
+    public float suspensionDepth;
+    public float suspensionAngle;
+    public float suspensionRestLength;
+    public float suspensionSpringCoefficient;
+    public float suspensionDampingCoefficient;
     public float tireWidth;
     public float tireDiameter;
 
-    // Private
+    // Private References
     private Transform car;
     private GameObject body;
     private Wheel[] wheels;
@@ -70,7 +73,8 @@ public class Car : MonoBehaviour
                 wheelPrefab,
                 IsFrontWheel(i), IsLeftWheel(i),
                 width, length,
-                suspensionHeight, suspensionOffset,
+                suspensionDepth, suspensionAngle, suspensionRestLength,
+                suspensionSpringCoefficient, suspensionDampingCoefficient,
                 tireWidth, tireDiameter
             );
             wheels[i] = wheel;
