@@ -67,6 +67,7 @@ public class Wheel : MonoBehaviour
         // Initialize CS-Steering as a child of wheelSpace
         csSteering = new GameObject("CS-Steering").transform;
         csSteering.SetParent(csWheel, false);
+        csSteering.localPosition = suspensionEnd;
 
         // Initialize CS-Rolling as a child of steeringSpace
         csRolling = new GameObject("CS-Rolling").transform;
@@ -170,7 +171,6 @@ public class Wheel : MonoBehaviour
         steeringJoint.angularZMotion = ConfigurableJointMotion.Locked;
     }
 
-
     
     private void JoinCSRollingToCSSteering()
     {
@@ -191,7 +191,6 @@ public class Wheel : MonoBehaviour
         rollingJoint.angularYMotion = ConfigurableJointMotion.Locked;
         rollingJoint.angularZMotion = ConfigurableJointMotion.Free;
     }
-
 
     
     private void JoinWheelObjToCSRolling()
