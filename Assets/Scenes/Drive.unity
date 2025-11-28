@@ -273,8 +273,8 @@ MonoBehaviour:
   suspensionDepth: 0.5
   suspensionAngle: 3
   suspensionRestLength: 0.7
-  suspensionSpringCoefficient: 101
-  suspensionDampingCoefficient: 20
+  suspensionSpringCoefficient: 1
+  suspensionDampingCoefficient: 1
   tireWidth: 0.215
   tireDiameter: 0.625
 --- !u!1 &963194225

@@ -43,7 +43,7 @@ public class Car : MonoBehaviour
         InitPhysics();
         for (int i = 0; i < wheels.Length; i++)
         {
-            wheels[i].InitJoints(car.GetComponent<Rigidbody>());
+            wheels[i].InitJoints();
         }
     }
 
@@ -97,7 +97,7 @@ public class Car : MonoBehaviour
         // Initialize wheel physics
         for (int i = 0; i < wheels.Length; i++)
         {
-            wheels[i].InitPhysics();
+            wheels[i].InitPhysics(carRb);
         }
     }
 
@@ -105,8 +105,18 @@ public class Car : MonoBehaviour
     void FixedUpdate()
     {
         if (isLogInputs) LogInputs();
-        if (isRenderSuspension) foreach (var wheel in wheels) wheel.RenderSuspension();
+        if (isRenderSuspension)
+        {
+            foreach (var wheel in wheels) wheel.RenderSuspension();
+            foreach (var wheel in wheels) wheel.RenderSuspensionForces();
+        }
         HandleInput();
+        foreach (var wheel in wheels) 
+        {
+            wheel.ResetSuspensionForces();
+            wheel.UpdateSuspensionForces();
+            wheel.ApplySuspensionForces(Time.fixedDeltaTime);
+        }
     }
 
 
