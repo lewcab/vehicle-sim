@@ -5,15 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(Transform))]
 public class Wheel : MonoBehaviour
 {
-    private struct SuspensionParticle
-    {
-        public Vector3 position;
-        public Vector3 velocity;
-        public Vector3 currentForces;
-    }
-
     private Transform csWheel;      // The root transform for the wheel assembly
-    private Transform csSuspension; // The transform that handles suspension movement
     private Transform csSteering;   // The transform that handles steering rotation
     private Transform csRolling;    // The transform that handles tire rolling rotation
     private Transform wheelObj;     // The visual/physical representation of the wheel
@@ -23,9 +15,6 @@ public class Wheel : MonoBehaviour
     private Rigidbody steeringRB;   // The RB of the steering
     private Rigidbody rollingRB;    // The RB of the rolling
     private Rigidbody carRB;        // The RB of the car's body
-
-    private SuspensionParticle suspensionBase;
-    private SuspensionParticle suspensionEnd;
 
     private bool isFront;
     private bool isLeft;
@@ -41,7 +30,7 @@ public class Wheel : MonoBehaviour
 
 
     public void Initialize(
-        Transform wheelPrefab,
+        Rigidbody car, Transform wheelPrefab,
         bool front, bool left,
         float carWidth, float carLength,
         float suspensionHeight, float suspensionAngle, float suspensionRestLength,
@@ -49,6 +38,7 @@ public class Wheel : MonoBehaviour
         float tireWidth, float tireDiameter
     )
     {
+        carRB = car;
         csWheel = GetComponent<Transform>();
 
         isFront = front;
@@ -66,35 +56,16 @@ public class Wheel : MonoBehaviour
         tireW = tireWidth;
         tireD = tireDiameter;
 
-        // Initialize suspension particles
-        suspensionBase = new SuspensionParticle()
-        {
-            position = new Vector3(0, suspDepth, Mathf.Tan(suspAngle * Mathf.Deg2Rad) * suspDepth),
-            velocity = Vector3.zero,
-            currentForces = Vector3.zero
-        };
-        suspensionEnd = new SuspensionParticle()
-        {
-            position = Quaternion.Euler(suspAngle, 0, 0) * Vector3.down * suspRL,
-            velocity = Vector3.zero,
-            currentForces = Vector3.zero
-        };
-
         // Initialize CS-Wheel, given by the xOffset and yOffset
         csWheel = GetComponent<Transform>();
         csWheel.SetLocalPositionAndRotation(
-            new Vector3(xOffset, 0, zOffset),
+            new Vector3(xOffset, 0, zOffset) + Quaternion.Euler(suspAngle, 0, 0) * Vector3.down * suspRL,
             Quaternion.identity
         );
 
-        // Initialize CS-Suspension as a child of csWheel
-        csSuspension = new GameObject("CS-Suspension").transform;
-        csSuspension.SetParent(csWheel, false);
-        csSuspension.localPosition = suspensionEnd.position;
-
         // Initialize CS-Steering as a child of wheelSpace
         csSteering = new GameObject("CS-Steering").transform;
-        csSteering.SetParent(csSuspension, false);
+        csSteering.SetParent(csWheel, false);
 
         // Initialize CS-Rolling as a child of steeringSpace
         csRolling = new GameObject("CS-Rolling").transform;
@@ -102,6 +73,12 @@ public class Wheel : MonoBehaviour
 
         // Initialize wheelObj, the pysical wheel
         InitializeWheelObj(wheelPrefab);
+
+        // Recursvely set layer to "Car Wheel"
+        foreach (Transform child in csWheel.GetComponentsInChildren<Transform>())
+        {
+            child.gameObject.layer = LayerMask.NameToLayer("Car Wheel");
+        }
     }
 
 
@@ -141,7 +118,6 @@ public class Wheel : MonoBehaviour
 
         // Add Rigidbody to csWheel, csSuspension, csSteering, csRolling
         wheelRB = csWheel.gameObject.AddComponent<Rigidbody>();
-        suspensionRB = csSuspension.gameObject.AddComponent<Rigidbody>();
         steeringRB = csSteering.gameObject.AddComponent<Rigidbody>();
         rollingRB = csRolling.gameObject.AddComponent<Rigidbody>();
     }
@@ -152,39 +128,46 @@ public class Wheel : MonoBehaviour
     /// </summary>
     public void InitJoints()
     {
-        JoinCSSuspensionToCSWheel();
-        JoinCSSteeringToCSSuspension();
+        JoinCSWheelToCar();
+        JoinCSSteeringToCSWheel();
         JoinCSRollingToCSSteering();
         JoinWheelObjToCSRolling();
     }
 
 
-    private void JoinCSSuspensionToCSWheel()
+    private void JoinCSWheelToCar()
     {
-        // Joint: Connect csSuspension to csWheel
-        ConfigurableJoint suspensionJoint = csSuspension.gameObject.AddComponent<ConfigurableJoint>();
-        suspensionJoint.connectedBody = csWheel.GetComponent<Rigidbody>();
+        // Joint: Connect csWheel to car body
+        ConfigurableJoint wheelJoint = csWheel.gameObject.AddComponent<ConfigurableJoint>();
+        wheelJoint.connectedBody = carRB;
 
-        suspensionJoint.autoConfigureConnectedAnchor = true;
-        suspensionJoint.anchor = Vector3.zero;
+        wheelJoint.autoConfigureConnectedAnchor = true;
+        wheelJoint.anchor = Vector3.zero;
 
-        // Lock all linear motion
-        suspensionJoint.xMotion = ConfigurableJointMotion.Locked;
-        suspensionJoint.yMotion = ConfigurableJointMotion.Locked;
-        suspensionJoint.zMotion = ConfigurableJointMotion.Locked;
+        // Lock all linear, except Y motion for suspension
+        wheelJoint.xMotion = ConfigurableJointMotion.Locked;
+        wheelJoint.yMotion = ConfigurableJointMotion.Free;
+        wheelJoint.zMotion = ConfigurableJointMotion.Locked;
 
-        // Allow no angular motion for csSuspension
-        suspensionJoint.angularXMotion = ConfigurableJointMotion.Locked;
-        suspensionJoint.angularYMotion = ConfigurableJointMotion.Locked;
-        suspensionJoint.angularZMotion = ConfigurableJointMotion.Locked;
+        // Lock all angular motion
+        wheelJoint.angularXMotion = ConfigurableJointMotion.Locked;
+        wheelJoint.angularYMotion = ConfigurableJointMotion.Locked;
+        wheelJoint.angularZMotion = ConfigurableJointMotion.Locked;
+
+        // Set suspension spring and damper
+        JointDrive suspensionDrive = new JointDrive();
+        suspensionDrive.positionSpring = suspK;
+        suspensionDrive.positionDamper = suspD;
+        suspensionDrive.maximumForce = Mathf.Infinity;
+        wheelJoint.yDrive = suspensionDrive;
     }
 
 
-    private void JoinCSSteeringToCSSuspension()
+    private void JoinCSSteeringToCSWheel()
     {
-        // Joint: Connect csSteering to csSuspension
+        // Joint: Connect csSteering to csWheel
         ConfigurableJoint steeringJoint = csSteering.gameObject.AddComponent<ConfigurableJoint>();
-        steeringJoint.connectedBody = csSuspension.GetComponent<Rigidbody>();
+        steeringJoint.connectedBody = csWheel.GetComponent<Rigidbody>();
 
         steeringJoint.autoConfigureConnectedAnchor = true;
         steeringJoint.anchor = Vector3.zero;
@@ -233,77 +216,6 @@ public class Wheel : MonoBehaviour
     }
 
 
-    public void ResetSuspensionForces()
-    {
-        suspensionBase.currentForces = Vector3.zero;
-        suspensionEnd.currentForces = Vector3.zero;
-    }
-
-
-    public void UpdateSuspensionForces()
-    {
-        Vector3 suspensionDirection = Quaternion.Euler(suspAngle, 0, 0) * Vector3.down;
-
-        Vector3 displacement = suspensionEnd.position - suspensionBase.position;
-        Vector3 relativeVelocity = suspensionEnd.velocity - suspensionBase.velocity;
-
-        float distance = Vector3.Dot(displacement, suspensionDirection);
-        Vector3 direction = suspensionDirection.normalized;
-
-        Vector3 springForce = -suspK * (distance - suspRL) * direction;
-        Vector3 dampingForce = -suspD * Vector3.Dot(relativeVelocity, direction) * direction;
-
-        Vector3 totalForce = springForce + dampingForce;
-        suspensionBase.currentForces += totalForce;
-        suspensionEnd.currentForces -= totalForce;
-    }
-
-
-    public void ApplySuspensionForces(float deltaTime)
-    {
-        carRB.AddForceAtPosition(
-            suspensionBase.currentForces,
-            csWheel.position,
-            ForceMode.Force
-        );
-
-        suspensionRB.AddForce(
-            suspensionEnd.currentForces,
-            ForceMode.Force
-        );
-
-        // Update suspension particle velocities
-        suspensionBase.velocity += (suspensionBase.currentForces / carRB.mass) * deltaTime;
-        suspensionEnd.velocity += (suspensionEnd.currentForces / suspensionRB.mass) * deltaTime;
-
-        // Update suspension particle positions
-        suspensionBase.position += suspensionBase.velocity * deltaTime;
-        suspensionEnd.position += suspensionEnd.velocity * deltaTime;
-    }
-
-
-    public void RenderSuspension()
-    {
-        Debug.DrawLine(csWheel.position, csSuspension.position, Color.red);
-    }
-
-
-    public void RenderSuspensionForces()
-    {
-        Debug.DrawLine(
-            csWheel.position,
-            csWheel.position + suspensionBase.currentForces,
-            Color.green
-        );
-        Debug.DrawLine(
-            csSuspension.position,
-            csSuspension.position + suspensionEnd.currentForces,
-            Color.blue
-        );
-    }
-
-
-    /// <summary>
     /// Apply steering to the wheel
     /// </summary>
     /// <param name="input">Stick X axis input in range [-1, 1]</param>

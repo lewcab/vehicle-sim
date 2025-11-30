@@ -32,6 +32,7 @@ public class Car : MonoBehaviour
 
     // Private References
     private Transform car;
+    private Rigidbody carRB;
     private GameObject body;
     private Wheel[] wheels;
 
@@ -58,6 +59,12 @@ public class Car : MonoBehaviour
         body.transform.SetParent(car, false);
         body.transform.localScale = new(length, bodyThickness, width);
         body.transform.localPosition = new Vector3(0f, (bodyThickness/2) - suspensionDepth, 0f);
+
+        // Add Rigidbody to the car body
+        carRB = car.gameObject.AddComponent<Rigidbody>();
+        carRB.mass = carWeight;
+
+        body.GetComponent<Collider>().excludeLayers = LayerMask.GetMask("Car Wheel");
     }
 
 
@@ -73,7 +80,7 @@ public class Car : MonoBehaviour
 
             Wheel wheel = wheelTransform.gameObject.AddComponent<Wheel>();
             wheel.Initialize(
-                wheelPrefab,
+                carRB, wheelPrefab,
                 IsFrontWheel(i), IsLeftWheel(i),
                 width, length,
                 suspensionDepth, suspensionAngle, suspensionRestLength,
@@ -87,17 +94,10 @@ public class Car : MonoBehaviour
 
     void InitPhysics()
     {
-        // Add Rigidbody to the car body
-        Rigidbody carRb = car.gameObject.AddComponent<Rigidbody>();
-        carRb.mass = carWeight; // TODO: make configurable
-        carRb.drag = 0.05f;
-        carRb.angularDrag = 0.1f;
-        Destroy(body.GetComponent<BoxCollider>());
-
         // Initialize wheel physics
         for (int i = 0; i < wheels.Length; i++)
         {
-            wheels[i].InitPhysics(carRb);
+            wheels[i].InitPhysics(carRB);
         }
     }
 
@@ -105,18 +105,7 @@ public class Car : MonoBehaviour
     void FixedUpdate()
     {
         if (isLogInputs) LogInputs();
-        if (isRenderSuspension)
-        {
-            foreach (var wheel in wheels) wheel.RenderSuspension();
-            foreach (var wheel in wheels) wheel.RenderSuspensionForces();
-        }
         HandleInput();
-        foreach (var wheel in wheels) 
-        {
-            wheel.ResetSuspensionForces();
-            wheel.UpdateSuspensionForces();
-            wheel.ApplySuspensionForces(Time.fixedDeltaTime);
-        }
     }
 
 
