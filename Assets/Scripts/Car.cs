@@ -10,12 +10,14 @@ public class Car : MonoBehaviour
     public bool isRenderSuspension;
     public bool isKeyboardControl;
 
-    // Prefabs
+    // Prefabs and Components
     public Transform wheelPrefab;
+    public enum WheelType { JOINT, RAYCAST }
+    public WheelType wheelType;
 
     // Customizable Parameters
-    public float length;
-    public float width;
+    public float wheelbase;
+    public float track;
     public float carWeight;
     public enum DriveType { RWD, FWD, AWD }
     public DriveType driveType;
@@ -40,12 +42,7 @@ public class Car : MonoBehaviour
     void Start()
     {
         InitCar();
-        SpawnWheels();
-        InitPhysics();
-        for (int i = 0; i < wheels.Length; i++)
-        {
-            wheels[i].InitJoints();
-        }
+        InitWheels();
     }
 
 
@@ -57,7 +54,7 @@ public class Car : MonoBehaviour
 
         float bodyThickness = 0.05f;
         body.transform.SetParent(car, false);
-        body.transform.localScale = new(length, bodyThickness, width);
+        body.transform.localScale = new(wheelbase, bodyThickness, track);
         body.transform.localPosition = new Vector3(0f, (bodyThickness/2) - suspensionDepth, 0f);
 
         // Add Rigidbody to the car body
@@ -68,7 +65,7 @@ public class Car : MonoBehaviour
     }
 
 
-    void SpawnWheels()
+    void InitWheels()
     {
         wheels = new Wheel[4];
 
@@ -78,11 +75,22 @@ public class Car : MonoBehaviour
             wheelTransform.SetParent(car.transform, false);
             wheelTransform.name = $"CS-{(IsFrontWheel(i) ? "F" : "B")}{(IsLeftWheel(i) ? "L" : "R")}";
 
-            Wheel wheel = wheelTransform.gameObject.AddComponent<Wheel>();
+            Wheel wheel;
+            if (wheelType == WheelType.JOINT)
+                wheel = wheelTransform.gameObject.AddComponent<WheelJoint>();
+            else if (wheelType == WheelType.RAYCAST)
+                wheel = wheelTransform.gameObject.AddComponent<WheelRaycast>();
+            else
+            {
+                Debug.LogError("Invalid wheel type selected!");
+                return;
+            }
+
             wheel.Initialize(
-                carRB, wheelPrefab,
+                car, carRB,
+                wheelPrefab,
                 IsFrontWheel(i), IsLeftWheel(i),
-                width, length,
+                track, wheelbase,
                 suspensionDepth, suspensionAngle, suspensionRestLength,
                 suspensionSpringCoefficient, suspensionDampingCoefficient,
                 tireWidth, tireDiameter
@@ -92,19 +100,13 @@ public class Car : MonoBehaviour
     }
 
 
-    void InitPhysics()
-    {
-        // Initialize wheel physics
-        for (int i = 0; i < wheels.Length; i++)
-        {
-            wheels[i].InitPhysics(carRB);
-        }
-    }
-
-
     void FixedUpdate()
     {
         if (isLogInputs) LogInputs();
+        if (isRenderSuspension)
+        {
+            for (int i = 0; i < wheels.Length; i++) wheels[i].RenderSuspension();
+        }
         HandleInput();
     }
 
