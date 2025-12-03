@@ -17,6 +17,7 @@ public class WheelRaycast : Wheel
     private bool isGrounded;
     private Vector3 contactPoint;
     private Vector3 contactNormal;
+    private Vector3 wheelVelocity;
 
 
     void FixedUpdate()
@@ -88,7 +89,7 @@ public class WheelRaycast : Wheel
     /// <summary>
     /// Instantiate and position the wheel visuals
     /// </summary>
-    void InitializeWheelObj()
+    private void InitializeWheelObj()
     {
         wheelObj = Instantiate(wheelPrefab, csRolling);
         wheelObj.name = "Wheel";
@@ -99,7 +100,7 @@ public class WheelRaycast : Wheel
         wheelObj.localScale = new Vector3(tireD, tireD, tireW);
     }
 
-    
+
     /// <summary>
     /// Perform a raycast representing the suspension
     /// </summary>
@@ -140,11 +141,7 @@ public class WheelRaycast : Wheel
 
             Debug.DrawRay(rayOrigin, totalForce / carRB.mass, Color.cyan);
         }
-        else
-        {
-            isGrounded = false;
-            prevSuspLength = suspRL;
-        }
+        else isGrounded = false;
     }
 
 
@@ -177,8 +174,8 @@ public class WheelRaycast : Wheel
         if (!isGrounded) return;
 
         Vector3 lateralDir = csRolling.forward;
-        Vector3 tireVelocity = carRB.GetPointVelocity(csRolling.position);
-        float lateralVelocity = Vector3.Dot(tireVelocity, lateralDir);
+        wheelVelocity = carRB.GetPointVelocity(csRolling.position);
+        float lateralVelocity = Vector3.Dot(wheelVelocity, lateralDir);
         float lateralFrictionCoefficient = 0.6f;
         float supportedMass = carRB.mass * Physics.gravity.magnitude / 4f;
 
@@ -229,9 +226,9 @@ public class WheelRaycast : Wheel
         float maxForce = 10000f;
 
         float magnitude = input * maxForce;
-        Vector3 force = csWheel.right * magnitude;
+        Vector3 force = csRolling.right * magnitude;
         force = Vector3.ProjectOnPlane(force, contactNormal);
-        Vector3 position = csWheel.position + suspensionDirection * currSuspLength;
+        Vector3 position = csRolling.position;
         carRB.AddForceAtPosition(force, position);
         Debug.DrawRay(position, force/carRB.mass, Color.magenta);
     }
@@ -243,7 +240,10 @@ public class WheelRaycast : Wheel
     /// <param name="input">Trigger input in range [0, 1]</param>
     public override void Brake(float input)
     {
-        if (!isGrounded) return;
+        if (
+            !isGrounded ||
+            Vector3.Dot(wheelVelocity, csWheel.right) <= 0
+        ) return;
 
         float maxBrakeForce = 1500f;
 
