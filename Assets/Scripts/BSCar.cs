@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(Transform))]
-public class Car : MonoBehaviour
+public class BSCar : MonoBehaviour
 {
     // Debugging
     public bool isLogInputs;
@@ -13,8 +13,6 @@ public class Car : MonoBehaviour
 
     // Prefabs and Components
     public Transform wheelPrefab;
-    public enum WheelType { JOINT, RAYCAST }
-    public WheelType wheelType;
 
     // Customizable Parameters
     public float wheelbase;
@@ -37,7 +35,7 @@ public class Car : MonoBehaviour
     private Transform car;
     private Rigidbody carRB;
     private GameObject body;
-    private Wheel[] wheels;
+    private BSWheel[] wheels;
     private float[] wheelLoads;
     private float[] suspensionForces;
 
@@ -71,7 +69,7 @@ public class Car : MonoBehaviour
 
     void InitWheels()
     {
-        wheels = new Wheel[4];
+        wheels = new BSWheel[4];
         wheelLoads = new float[4];
         suspensionForces = new float[4];
 
@@ -81,23 +79,15 @@ public class Car : MonoBehaviour
             wheelTransform.SetParent(car.transform, false);
             wheelTransform.name = $"CS-{(IsFrontWheel(i) ? "F" : "B")}{(IsLeftWheel(i) ? "L" : "R")}";
 
-            Wheel wheel;
-            if (wheelType == WheelType.JOINT)
-                wheel = wheelTransform.gameObject.AddComponent<WheelJoint>();
-            else if (wheelType == WheelType.RAYCAST)
-                wheel = wheelTransform.gameObject.AddComponent<WheelRaycast>();
-            else
-            {
-                Debug.LogError("Invalid wheel type selected!");
-                return;
-            }
+            BSWheel wheel;
+            wheel = wheelTransform.gameObject.AddComponent<BSWheel>();
 
             wheel.Initialize(
                 car, carRB,
                 wheelPrefab,
                 IsFrontWheel(i), IsLeftWheel(i),
                 track, wheelbase,
-                suspensionDepth, suspensionAngle, suspensionRestLength,
+                suspensionAngle, suspensionRestLength,
                 suspensionSpringCoefficient, suspensionDampingCoefficient,
                 tireWidth, tireDiameter
             );
@@ -163,14 +153,14 @@ public class Car : MonoBehaviour
 
         for (int i = 0; i < wheels.Length; i++)
         {
-            suspensionForces[i] = wheels[i].suspForce.magnitude;
-            if (wheels[i].isGrounded)
+            suspensionForces[i] = wheels[i].GetSuspensionForce().magnitude;
+            if (wheels[i].IsGrounded())
                 totalSuspensionForce += suspensionForces[i];
         }
 
         for (int i = 0; i < wheels.Length; i++)
         {
-            if (wheels[i].isGrounded && totalSuspensionForce > 0f)
+            if (wheels[i].IsGrounded() && totalSuspensionForce > 0f)
                 wheelLoads[i] = (suspensionForces[i] / totalSuspensionForce) * totalLoad;
             else
                 wheelLoads[i] = 0f;

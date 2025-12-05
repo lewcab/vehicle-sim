@@ -1,19 +1,43 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(Transform))]
-public class WheelRaycast : Wheel
+public class BSWheel : MonoBehaviour
 {
-    private Transform csRolling;
-    private Transform wheelObj;
+    // Game Object References
+    private Transform csCar;        // The transform of the car space
+    private Transform csWheel;      // The transform for the wheel space
+    private Transform csRolling;    // The transform for the wheel position along suspension
+    private Transform wheelObj;     // The visual wheel object
+    private Rigidbody carRB;        // The RB of the car
+    private Transform wheelPrefab;  // The prefab for the wheel
 
-    private Vector3 suspensionDirection;
+    // Wheel Properties
+    private bool isFront;   // true if front wheel, false if rear wheel
+    private bool isLeft;    // true if left wheel, false if right wheel
+    private float tireW;    // width of tire
+    private float tireD;    // diameter of tire
 
-    private Vector3 contactPoint;
-    private Vector3 contactNormal;
-    private Vector3 wheelVelocity;
+    private float xOffset;
+    private float zOffset;
+
+    // Suspension Properties
+    private Vector3 suspensionDirection;    // direction of suspension towards ground
+    private float suspAngle;                // suspension offset
+    private float suspRL;                   // suspension resting length
+    private float suspK;                    // suspension spring coefficient
+    private float suspD;                    // suspension damping coefficient
+
+    // Physical Properties
+    private bool isGrounded;        // true if wheel is in contact with ground
+    private float currSuspLength;   // current length of suspension
+    private float prevSuspLength;   // previous length of suspension
+    private Vector3 suspForce;      // current force exerted by suspension onto the car
+
+    private Vector3 contactPoint;   // point of contact with ground
+    private Vector3 contactNormal;  // normal at contact point
+    private Vector3 wheelVelocity;  // velocity of the wheel at contact point
 
 
     void FixedUpdate()
@@ -25,12 +49,12 @@ public class WheelRaycast : Wheel
     /// <summary>
     /// Initialize the raycast wheel
     /// </summary>
-    public override void Initialize(
+    public void Initialize(
         Transform csCar, Rigidbody carRB, 
         Transform wheelPrefab,
         bool front, bool left,
         float carWidth, float carLength,
-        float suspensionHeight, float suspensionAngle, float suspensionRestLength,
+        float suspensionAngle, float suspensionRestLength,
         float suspensionSpringCoefficient, float suspensionDampingCoefficient,
         float tireWidth, float tireDiameter
     )
@@ -47,7 +71,6 @@ public class WheelRaycast : Wheel
         xOffset = carLength / 2f * (isFront ? 1f : -1f);
         zOffset = carWidth / 2f * (isLeft ? 1f : -1f);
 
-        suspDepth = suspensionHeight;
         suspAngle = suspensionAngle * (isLeft ? -1f : 1f);
         suspRL = suspensionRestLength;
         currSuspLength = suspRL;
@@ -111,7 +134,7 @@ public class WheelRaycast : Wheel
     /// <summary>
     /// Update and apply suspension forces to carRB at the suspension base
     /// </summary>
-    public override void UpdateSuspensionForces()
+    public void UpdateSuspensionForces()
     {
         Vector3 rayOrigin = csWheel.position;
         Vector3 rayDirection = csCar.TransformDirection(suspensionDirection);
@@ -142,7 +165,7 @@ public class WheelRaycast : Wheel
     /// <summary>
     /// Render the suspension raycast for debugging
     /// </summary>
-    public override void RenderSuspension()
+    public void RenderSuspension()
     {
         Vector3 rayOrigin = csWheel.position;
         Vector3 rayDirection = csCar.TransformDirection(suspensionDirection);
@@ -164,7 +187,7 @@ public class WheelRaycast : Wheel
     /// Update and apply tire forces to carRB at the tire contact point with the ground
     /// </summary>
     /// <param name="load">The force being supported by the wheel</param>
-    public override void UpdateTireForces(float load)
+    public void UpdateTireForces(float load)
     {
         if (!isGrounded) return;
 
@@ -195,7 +218,7 @@ public class WheelRaycast : Wheel
     /// Apply steering to the wheel
     /// </summary>
     /// <param name="input">Stick X axis input in range [-1, 1]</param>
-    public override void Steer(float input, float maxAngle)
+    public void Steer(float input, float maxAngle)
     {
         if (!isFront) return;
 
@@ -209,11 +232,11 @@ public class WheelRaycast : Wheel
     /// </summary>
     /// <param name="input">Trigger input in range [0, 1]</param>
     /// <param name="driveType">The drive type of the car (FWD, RWD, AWD)</param>
-    public override void Throttle(float input, Car.DriveType driveType)
+    public void Throttle(float input, BSCar.DriveType driveType)
     {
         if (
-            driveType == Car.DriveType.FWD && !isFront ||
-            driveType == Car.DriveType.RWD && isFront ||
+            driveType == BSCar.DriveType.FWD && !isFront ||
+            driveType == BSCar.DriveType.RWD && isFront ||
             !isGrounded
         ) return;
 
@@ -232,7 +255,7 @@ public class WheelRaycast : Wheel
     /// Apply brake to the wheel
     /// </summary>
     /// <param name="input">Trigger input in range [0, 1]</param>
-    public override void Brake(float input)
+    public void Brake(float input)
     {
         if (
             !isGrounded ||
@@ -247,5 +270,14 @@ public class WheelRaycast : Wheel
         Vector3 position = csWheel.position + suspensionDirection * currSuspLength;
         carRB.AddForceAtPosition(force, position);
         Debug.DrawRay(position, force/carRB.mass, Color.yellow);
+    }
+
+
+    public Vector3 GetSuspensionForce() {
+        return suspForce;
+    }
+
+    public bool IsGrounded() {
+        return isGrounded;
     }
 }

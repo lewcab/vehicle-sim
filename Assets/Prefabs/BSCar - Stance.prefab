@@ -109,7 +109,7 @@ GameObject:
   - component: {fileID: 645087303506947178}
   - component: {fileID: 6190559081075399992}
   m_Layer: 0
-  m_Name: Car - Joint
+  m_Name: BSCar - Stance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -147,17 +147,16 @@ MonoBehaviour:
   isRenderSuspension: 1
   isKeyboardControl: 0
   wheelPrefab: {fileID: 698487993823452970, guid: a051f801fa1d0554387f87737139a6f0, type: 3}
-  wheelType: 0
-  wheelbase: 4.26
-  track: 1.78
+  wheelbase: 2.58
+  track: 1.54
   carWeight: 1300
   driveType: 0
   steeringAngle: 30
   suspensionDepth: 0.3
   suspensionAngle: 3
   suspensionRestLength: 0.7
-  suspensionSpringCoefficient: 15000
-  suspensionDampingCoefficient: 2000
+  suspensionSpringCoefficient: 40000
+  suspensionDampingCoefficient: 4000
   tireWidth: 0.215
   tireDiameter: 0.625
 --- !u!1 &8831550046462022398
