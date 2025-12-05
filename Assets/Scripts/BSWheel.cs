@@ -19,15 +19,12 @@ public class BSWheel : MonoBehaviour
     private float tireW;    // width of tire
     private float tireD;    // diameter of tire
 
-    private float xOffset;
-    private float zOffset;
-
     // Suspension Properties
-    private Vector3 suspensionDirection;    // direction of suspension towards ground
-    private float suspAngle;                // suspension offset
-    private float suspRL;                   // suspension resting length
-    private float suspK;                    // suspension spring coefficient
-    private float suspD;                    // suspension damping coefficient
+    private Vector3 suspDirection;  // direction of suspension towards ground
+    private float suspAngle;        // suspension offset
+    private float suspRL;           // suspension resting length
+    private float suspK;            // suspension spring coefficient
+    private float suspD;            // suspension damping coefficient
 
     // Physical Properties
     private bool isGrounded;        // true if wheel is in contact with ground
@@ -68,8 +65,8 @@ public class BSWheel : MonoBehaviour
         isFront = front;
         isLeft = left;
 
-        xOffset = carLength / 2f * (isFront ? 1f : -1f);
-        zOffset = carWidth / 2f * (isLeft ? 1f : -1f);
+        float xOffset = carLength / 2f * (isFront ? 1f : -1f);
+        float zOffset = carWidth / 2f * (isLeft ? 1f : -1f);
 
         suspAngle = suspensionAngle * (isLeft ? -1f : 1f);
         suspRL = suspensionRestLength;
@@ -81,7 +78,7 @@ public class BSWheel : MonoBehaviour
         tireW = tireWidth;
         tireD = tireDiameter;
 
-        suspensionDirection = Quaternion.Euler(suspAngle, 0, 0) * Vector3.down;
+        suspDirection = Quaternion.Euler(suspAngle, 0, 0) * Vector3.down;
 
         // Initialize CS-Wheel, given by the xOffset and yOffset
         csWheel = GetComponent<Transform>();
@@ -94,7 +91,7 @@ public class BSWheel : MonoBehaviour
         csRolling = new GameObject("CS-Rolling").transform;
         csRolling.SetParent(csWheel);
         csRolling.SetLocalPositionAndRotation(
-            suspensionDirection * currSuspLength,
+            suspDirection * currSuspLength,
             Quaternion.identity
         );
 
@@ -137,7 +134,7 @@ public class BSWheel : MonoBehaviour
     public void UpdateSuspensionForces()
     {
         Vector3 rayOrigin = csWheel.position;
-        Vector3 rayDirection = csCar.TransformDirection(suspensionDirection);
+        Vector3 rayDirection = csCar.TransformDirection(suspDirection);
 
         if (PerformSuspensionRaycast(rayOrigin, rayDirection, out RaycastHit hit))
         {
@@ -168,7 +165,7 @@ public class BSWheel : MonoBehaviour
     public void RenderSuspension()
     {
         Vector3 rayOrigin = csWheel.position;
-        Vector3 rayDirection = csCar.TransformDirection(suspensionDirection);
+        Vector3 rayDirection = csCar.TransformDirection(suspDirection);
 
         if (PerformSuspensionRaycast(rayOrigin, rayDirection, out RaycastHit hit))
         {
@@ -210,7 +207,7 @@ public class BSWheel : MonoBehaviour
     /// </summary>
     private void UpdateWheelPosition()
     {
-        csRolling.localPosition = suspensionDirection * currSuspLength;
+        csRolling.localPosition = suspDirection * currSuspLength;
     }
 
 
@@ -267,7 +264,7 @@ public class BSWheel : MonoBehaviour
         float magnitude = -input * maxBrakeForce;
         Vector3 force = csWheel.right * magnitude;
         force = Vector3.ProjectOnPlane(force, contactNormal);
-        Vector3 position = csWheel.position + suspensionDirection * currSuspLength;
+        Vector3 position = csWheel.position + suspDirection * currSuspLength;
         carRB.AddForceAtPosition(force, position);
         Debug.DrawRay(position, force/carRB.mass, Color.yellow);
     }

@@ -62,8 +62,6 @@ public class BSCar : MonoBehaviour
         carRB = car.gameObject.AddComponent<Rigidbody>();
         carRB.mass = carWeight;
         carRB.centerOfMass = new Vector3(0f, -suspensionDepth / 2f, 0f);
-
-        body.GetComponent<Collider>().excludeLayers = LayerMask.GetMask("Car Wheel");
     }
 
 
