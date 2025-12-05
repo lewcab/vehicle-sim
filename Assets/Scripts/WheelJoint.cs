@@ -209,9 +209,21 @@ public class WheelJoint : Wheel
     }
 
 
+    public override void UpdateSuspensionForces()
+    {
+        // Does nothing, handled by ConfigurableJoint in this implementation
+    }
+
+
     public override void RenderSuspension()
     {
         // TODO: Implement
+    }
+
+
+    public override void UpdateTireForces(float load)
+    {
+        // Does nothing, tire forces handled by rigidbody physics in this implementation
     }
 
 

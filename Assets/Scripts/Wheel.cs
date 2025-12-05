@@ -5,27 +5,33 @@ using UnityEngine;
 [RequireComponent(typeof(Transform))]
 public abstract class Wheel : MonoBehaviour
 {
-    public Transform csCar;         // The root transform of the car
-    public Transform csWheel;       // The root transform for the wheel assembly
-
-    public Rigidbody carRB;         // The RB of the car's body
-
+    // Game Object References
+    public Transform csCar;         // The transform of the car space
+    public Transform csWheel;       // The transform for the wheel space
+    public Rigidbody carRB;         // The RB of the car
     public Transform wheelPrefab;   // The prefab for the wheel
 
+    // Wheel Properties
     public bool isFront;            // true if front wheel, false if rear wheel
     public bool isLeft;             // true if left wheel, false if right wheel
+    public float tireW;             // width of tire
+    public float tireD;             // diameter of tire
 
     public float xOffset;
     public float zOffset;
 
+    // Suspension Properties
     public float suspDepth;         // suspension height
     public float suspAngle;         // suspension offset
     public float suspRL;            // suspension resting length
     public float suspK;             // suspension spring coefficient
     public float suspD;             // suspension damping coefficient
 
-    public float tireW;             // width of tire
-    public float tireD;             // diameter of tire
+    // Physical Properties
+    public bool isGrounded;
+    public float currSuspLength;
+    public float prevSuspLength;
+    public Vector3 suspForce;
 
 
     public abstract void Initialize(
@@ -39,7 +45,13 @@ public abstract class Wheel : MonoBehaviour
     );
 
 
+    public abstract void UpdateSuspensionForces();
+
+
     public abstract void RenderSuspension();
+
+
+    public abstract void UpdateTireForces(float load);
 
 
     public abstract void Steer(

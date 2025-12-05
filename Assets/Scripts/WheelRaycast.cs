@@ -11,10 +11,6 @@ public class WheelRaycast : Wheel
 
     private Vector3 suspensionDirection;
 
-    private float currSuspLength;
-    private float prevSuspLength;
-
-    private bool isGrounded;
     private Vector3 contactPoint;
     private Vector3 contactNormal;
     private Vector3 wheelVelocity;
@@ -22,8 +18,6 @@ public class WheelRaycast : Wheel
 
     void FixedUpdate()
     {
-        UpdateSuspensionForces();
-        UpdateTireForces();
         UpdateWheelPosition();
     }
 
@@ -117,7 +111,7 @@ public class WheelRaycast : Wheel
     /// <summary>
     /// Update and apply suspension forces to carRB at the suspension base
     /// </summary>
-    public void UpdateSuspensionForces()
+    public override void UpdateSuspensionForces()
     {
         Vector3 rayOrigin = csWheel.position;
         Vector3 rayDirection = csCar.TransformDirection(suspensionDirection);
@@ -136,10 +130,10 @@ public class WheelRaycast : Wheel
             Vector3 springForce = compression * suspK * contactNormal;
             Vector3 dampingForce = suspD * suspensionVelocity * contactNormal;
 
-            Vector3 totalForce = springForce + dampingForce;
-            carRB.AddForceAtPosition(totalForce, rayOrigin, ForceMode.Force);
+            suspForce = springForce + dampingForce;
+            carRB.AddForceAtPosition(suspForce, rayOrigin, ForceMode.Force);
 
-            Debug.DrawRay(rayOrigin, totalForce / carRB.mass, Color.cyan);
+            Debug.DrawRay(rayOrigin, suspForce / carRB.mass, Color.cyan);
         }
         else isGrounded = false;
     }
@@ -169,17 +163,17 @@ public class WheelRaycast : Wheel
     /// <summary>
     /// Update and apply tire forces to carRB at the tire contact point with the ground
     /// </summary>
-    private void UpdateTireForces()
+    /// <param name="load">The force being supported by the wheel</param>
+    public override void UpdateTireForces(float load)
     {
         if (!isGrounded) return;
 
         Vector3 lateralDir = csRolling.forward;
         wheelVelocity = carRB.GetPointVelocity(csRolling.position);
         float lateralVelocity = Vector3.Dot(wheelVelocity, lateralDir);
-        float lateralFrictionCoefficient = 0.6f;
-        float supportedMass = carRB.mass * Physics.gravity.magnitude / 4f;
+        float lateralFrictionCoefficient = 0.9f;
 
-        Vector3 lateralForce = -lateralDir * lateralVelocity * lateralFrictionCoefficient * supportedMass;
+        Vector3 lateralForce = -lateralDir * lateralVelocity * lateralFrictionCoefficient * load;
         lateralForce = Vector3.ProjectOnPlane(lateralForce, contactNormal);
 
         carRB.AddForceAtPosition(lateralForce, contactPoint);

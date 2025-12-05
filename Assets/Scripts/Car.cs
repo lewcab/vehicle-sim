@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(Transform))]
@@ -37,6 +38,8 @@ public class Car : MonoBehaviour
     private Rigidbody carRB;
     private GameObject body;
     private Wheel[] wheels;
+    private float[] wheelLoads;
+    private float[] suspensionForces;
 
 
     void Start()
@@ -60,6 +63,7 @@ public class Car : MonoBehaviour
         // Add Rigidbody to the car body
         carRB = car.gameObject.AddComponent<Rigidbody>();
         carRB.mass = carWeight;
+        carRB.centerOfMass = new Vector3(0f, -suspensionDepth / 2f, 0f);
 
         body.GetComponent<Collider>().excludeLayers = LayerMask.GetMask("Car Wheel");
     }
@@ -68,6 +72,8 @@ public class Car : MonoBehaviour
     void InitWheels()
     {
         wheels = new Wheel[4];
+        wheelLoads = new float[4];
+        suspensionForces = new float[4];
 
         for (int i = 0; i < wheels.Length; i++)
         {
@@ -102,12 +108,20 @@ public class Car : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (isLogInputs) LogInputs();
-        if (isRenderSuspension)
-        {
-            for (int i = 0; i < wheels.Length; i++) wheels[i].RenderSuspension();
-        }
         HandleInput();
+        if (isLogInputs) 
+            LogInputs();
+
+        for (int i = 0; i < wheels.Length; i++) 
+            wheels[i].UpdateSuspensionForces();
+        
+        UpdateWheelLoads();
+        for (int i = 0; i < wheels.Length; i++)
+            wheels[i].UpdateTireForces(wheelLoads[i]);
+
+        if (isRenderSuspension)
+            for (int i = 0; i < wheels.Length; i++) 
+                wheels[i].RenderSuspension();
     }
 
 
@@ -141,6 +155,28 @@ public class Car : MonoBehaviour
         }
     }
     
+
+    private void UpdateWheelLoads()
+    {
+        float totalLoad = carRB.mass * Physics.gravity.magnitude;
+        float totalSuspensionForce = 0f;
+
+        for (int i = 0; i < wheels.Length; i++)
+        {
+            suspensionForces[i] = wheels[i].suspForce.magnitude;
+            if (wheels[i].isGrounded)
+                totalSuspensionForce += suspensionForces[i];
+        }
+
+        for (int i = 0; i < wheels.Length; i++)
+        {
+            if (wheels[i].isGrounded && totalSuspensionForce > 0f)
+                wheelLoads[i] = (suspensionForces[i] / totalSuspensionForce) * totalLoad;
+            else
+                wheelLoads[i] = 0f;
+        }
+    }
+
 
     private bool IsFrontWheel(int wheel_i)
     {
