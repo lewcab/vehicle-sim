@@ -1,6 +1,6 @@
 # 🚗 Bit Shox - Unity Vehicle Simulation
 
-A vehicle simulation system allowing for hot-swappable suspension and wheel implementations. 
+A realistic vehicle simulation system in Unity. Bit Shox was developed in Unity 2022.3, and has not been tested in more recent versions of Unity (ex. 2023.x, 6000.x).
 
 ## ⚙️ Startup Guide
 
