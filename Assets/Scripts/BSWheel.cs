@@ -196,6 +196,12 @@ public class BSWheel : MonoBehaviour
         Vector3 lateralForce = -lateralDir * lateralVelocity * lateralFrictionCoefficient * load;
         lateralForce = Vector3.ProjectOnPlane(lateralForce, contactNormal);
 
+        // Artificially limit lateral force to prevent flipping
+        // TODO: Replace with physical model
+        float maxLateralForce = load * lateralFrictionCoefficient;
+        if (lateralForce.magnitude > maxLateralForce)
+            lateralForce = lateralForce.normalized * maxLateralForce;
+
         carRB.AddForceAtPosition(lateralForce, contactPoint);
 
         Debug.DrawRay(contactPoint, lateralForce / carRB.mass, Color.blue);
