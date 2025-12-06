@@ -261,7 +261,7 @@ public class BSWheel : MonoBehaviour
             !isGrounded
         ) return;
 
-        float maxForce = 10000f;
+        float maxForce = 8000f;
 
         float magnitude = input * maxForce;
         Vector3 force = csRolling.right * magnitude;
@@ -284,8 +284,8 @@ public class BSWheel : MonoBehaviour
         ) return;
 
         float maxBrakeForce;
-        if (isFront) maxBrakeForce = 4000f;
-        else maxBrakeForce = 3000f;
+        if (isFront) maxBrakeForce = 3000f;
+        else maxBrakeForce = 2500f;
 
         float magnitude = -input * maxBrakeForce;
         Vector3 force = csWheel.right * magnitude;

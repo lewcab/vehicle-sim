@@ -109,7 +109,7 @@ GameObject:
   - component: {fileID: 645087303506947178}
   - component: {fileID: 6190559081075399992}
   m_Layer: 0
-  m_Name: BSCar - Stance
+  m_Name: BSCar - Sport
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
