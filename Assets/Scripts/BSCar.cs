@@ -46,6 +46,9 @@ public class BSCar : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Initializes the car body, Rigidbody, and visual shell.
+    /// </summary>
     void InitCar()
     {
         car = GetComponent<Transform>();
@@ -71,6 +74,9 @@ public class BSCar : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Initializes the four wheels of the car.
+    /// </summary>
     void InitWheels()
     {
         wheels = new BSWheel[4];
@@ -113,6 +119,9 @@ public class BSCar : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Handles user input for steering, throttle, and braking.
+    /// </summary>
     private void HandleInput()
     {
         float steerInput;
@@ -144,18 +153,31 @@ public class BSCar : MonoBehaviour
     }
     
 
+    /// <summary>
+    /// Determines if the wheel is a front wheel based on its index.
+    /// </summary>
+    /// <param name="wheel_i">Index of the wheel</param>
+    /// <returns>true if wheel is front wheel, false otherwise</returns>
     private bool IsFrontWheel(int wheel_i)
     {
         return wheel_i < 2;
     }
 
-
+    
+    /// <summary>
+    /// Determines if the wheel is a left wheel based on its index.
+    /// </summary>
+    /// <param name="wheel_i">Index of the wheel</param>
+    /// <returns>true if wheel is left wheel, false otherwise</returns>
     private bool IsLeftWheel(int wheel_i)
     {
         return wheel_i % 2 == 0;
     }
 
 
+    /// <summary>
+    /// Logs the current input values for debugging purposes.
+    /// </summary>
     private void LogInputs()
     {
         Debug.Log($"Inputs @ {Time.fixedTime}");
