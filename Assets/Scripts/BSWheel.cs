@@ -40,6 +40,7 @@ public class BSWheel : MonoBehaviour
     void FixedUpdate()
     {
         UpdateWheelPosition();
+        UpdateWheelRotation();
     }
 
 
@@ -214,6 +215,22 @@ public class BSWheel : MonoBehaviour
     private void UpdateWheelPosition()
     {
         csRolling.localPosition = suspDirection * currSuspLength;
+    }
+
+
+    /// <summary>
+    /// Update visual wheel rotation based on wheel linear velocity
+    /// </summary>
+    private void UpdateWheelRotation()
+    {
+        if (!isGrounded) return;
+
+        float wheelRadius = tireD / 2f;
+        float linearVelocity = Vector3.Dot(wheelVelocity, csRolling.right);
+        float angularVelocity = linearVelocity / wheelRadius;
+        float angularDisplacement = angularVelocity * Time.fixedDeltaTime;
+
+        wheelObj.localRotation *= Quaternion.Euler(0f, 0f, -angularDisplacement * Mathf.Rad2Deg);
     }
 
 
