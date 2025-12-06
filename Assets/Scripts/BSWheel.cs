@@ -16,6 +16,7 @@ public class BSWheel : MonoBehaviour
     // Wheel Properties
     private bool isFront;   // true if front wheel, false if rear wheel
     private bool isLeft;    // true if left wheel, false if right wheel
+    private float tireFC;   // friction coefficient of tire
     private float tireW;    // width of tire
     private float tireD;    // diameter of tire
 
@@ -54,7 +55,7 @@ public class BSWheel : MonoBehaviour
         float carWidth, float carLength,
         float suspensionAngle, float suspensionRestLength,
         float suspensionSpringCoefficient, float suspensionDampingCoefficient,
-        float tireWidth, float tireDiameter
+        float tireFrictionCoefficient, float tireWidth, float tireDiameter
     )
     {
         // Set parameters
@@ -76,6 +77,7 @@ public class BSWheel : MonoBehaviour
         suspK = suspensionSpringCoefficient;
         suspD = suspensionDampingCoefficient;
 
+        tireFC = tireFrictionCoefficient;
         tireW = tireWidth;
         tireD = tireDiameter;
 
@@ -191,15 +193,14 @@ public class BSWheel : MonoBehaviour
         Vector3 lateralDir = csRolling.forward;
         wheelVelocity = carRB.GetPointVelocity(csRolling.position);
         float lateralVelocity = Vector3.Dot(wheelVelocity, lateralDir);
-        float lateralFrictionCoefficient = 0.9f;
         float load = suspForce.magnitude;
 
-        Vector3 lateralForce = -lateralDir * lateralVelocity * lateralFrictionCoefficient * load;
+        Vector3 lateralForce = -lateralDir * lateralVelocity * tireFC * load;
         lateralForce = Vector3.ProjectOnPlane(lateralForce, contactNormal);
 
         // Artificially limit lateral force to prevent flipping
         // TODO: Replace with physical model
-        float maxLateralForce = load * lateralFrictionCoefficient;
+        float maxLateralForce = load * tireFC;
         if (lateralForce.magnitude > maxLateralForce)
             lateralForce = lateralForce.normalized * maxLateralForce;
 
@@ -282,7 +283,9 @@ public class BSWheel : MonoBehaviour
             Vector3.Dot(wheelVelocity, csWheel.right) <= 0
         ) return;
 
-        float maxBrakeForce = 1500f;
+        float maxBrakeForce;
+        if (isFront) maxBrakeForce = 4000f;
+        else maxBrakeForce = 3000f;
 
         float magnitude = -input * maxBrakeForce;
         Vector3 force = csWheel.right * magnitude;

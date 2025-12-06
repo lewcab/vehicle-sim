@@ -29,6 +29,7 @@ public class BSCar : MonoBehaviour
     public float suspensionRestLength;
     public float suspensionSpringCoefficient;
     public float suspensionDampingCoefficient;
+    public float tireFrictionCoefficient;
     public float tireWidth;
     public float tireDiameter;
 
@@ -63,6 +64,7 @@ public class BSCar : MonoBehaviour
         suspensionRestLength = Mathf.Max(0.1f, suspensionRestLength);
         suspensionSpringCoefficient = Mathf.Max(0.01f, suspensionSpringCoefficient);
         suspensionDampingCoefficient = Mathf.Max(0.01f, suspensionDampingCoefficient);
+        tireFrictionCoefficient = Mathf.Max(0.01f, tireFrictionCoefficient);
         tireWidth = Mathf.Max(0.01f, tireWidth);
         tireDiameter = Mathf.Max(0.01f, tireDiameter);
     }
@@ -119,7 +121,7 @@ public class BSCar : MonoBehaviour
                 track, wheelbase,
                 suspensionAngle, suspensionRestLength,
                 suspensionSpringCoefficient, suspensionDampingCoefficient,
-                tireWidth, tireDiameter
+                tireFrictionCoefficient, tireWidth, tireDiameter
             );
             wheels[i] = wheel;
         }
