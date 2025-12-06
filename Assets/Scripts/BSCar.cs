@@ -11,7 +11,8 @@ public class BSCar : MonoBehaviour
     public bool isRenderSuspension;
     public bool isKeyboardControl;
 
-    // Prefabs and Components
+    // Prefabs and Visual Components
+    public Transform carShellPrefab;
     public Transform wheelPrefab;
 
     // Customizable Parameters
@@ -60,6 +61,13 @@ public class BSCar : MonoBehaviour
         carRB = car.gameObject.AddComponent<Rigidbody>();
         carRB.mass = carWeight;
         carRB.centerOfMass = new Vector3(0f, -suspensionDepth / 2f, 0f);
+
+        // Add car shell visual
+        if (carShellPrefab != null)
+        {
+            Transform carShell = Instantiate(carShellPrefab, car);
+            carShell.localPosition = new Vector3(0f, (bodyThickness/2) - suspensionDepth, 0f);
+        }
     }
 
 
@@ -92,15 +100,12 @@ public class BSCar : MonoBehaviour
 
     void FixedUpdate()
     {
-        HandleInput();
         if (isLogInputs) 
             LogInputs();
 
-        for (int i = 0; i < wheels.Length; i++) 
-            wheels[i].UpdateSuspensionForces();
-        
-        for (int i = 0; i < wheels.Length; i++)
-            wheels[i].UpdateTireForces();
+        HandleInput();
+        foreach (BSWheel w in wheels) w.UpdateSuspensionForces();
+        foreach (BSWheel w in wheels) w.UpdateTireForces();
 
         if (isRenderSuspension)
             for (int i = 0; i < wheels.Length; i++) 
