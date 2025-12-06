@@ -46,6 +46,28 @@ public class BSCar : MonoBehaviour
     }
 
 
+    void OnValidate()
+    {
+        if (wheelPrefab == null)
+            Debug.LogWarning("[BSCar] Wheel Prefab is not assigned.");
+        
+        if (carShellPrefab == null)
+            Debug.LogWarning("[BSCar] Car Shell Prefab is not assigned.");
+
+        wheelbase = Mathf.Max(0.1f, wheelbase);
+        track = Mathf.Max(0.1f, track);
+        carWeight = Mathf.Max(0.1f, carWeight);
+        steeringAngle = Mathf.Clamp(steeringAngle, 0f, 90f);
+        suspensionDepth = Mathf.Max(0f, suspensionDepth);
+        suspensionAngle = Mathf.Clamp(suspensionAngle, 0f, 90f);
+        suspensionRestLength = Mathf.Max(0.1f, suspensionRestLength);
+        suspensionSpringCoefficient = Mathf.Max(0.01f, suspensionSpringCoefficient);
+        suspensionDampingCoefficient = Mathf.Max(0.01f, suspensionDampingCoefficient);
+        tireWidth = Mathf.Max(0.01f, tireWidth);
+        tireDiameter = Mathf.Max(0.01f, tireDiameter);
+    }
+
+
     /// <summary>
     /// Initializes the car body, Rigidbody, and visual shell.
     /// </summary>
