@@ -142,18 +142,18 @@ public class BSWheel : MonoBehaviour
 
             currSuspLength = hit.distance - (tireD / 2f);
             float compression = Mathf.Clamp(suspRL - currSuspLength, 0, suspRL);
-            float suspensionVelocity = (prevSuspLength - currSuspLength) / Time.fixedDeltaTime;
+            float suspSpeed = (prevSuspLength - currSuspLength) / Time.fixedDeltaTime;
             prevSuspLength = currSuspLength;
             contactPoint = hit.point;
             contactNormal = hit.normal;
 
             Vector3 springForce = compression * suspK * contactNormal;
-            Vector3 dampingForce = suspD * suspensionVelocity * contactNormal;
+            Vector3 dampingForce = suspD * suspSpeed * contactNormal;
 
             suspForce = springForce + dampingForce;
             carRB.AddForceAtPosition(suspForce, rayOrigin, ForceMode.Force);
 
-            Debug.DrawRay(rayOrigin, suspForce / carRB.mass, Color.cyan);
+            Debug.DrawRay(rayOrigin, suspForce / carRB.mass, Color.green);
         }
         else isGrounded = false;
     }
@@ -170,12 +170,12 @@ public class BSWheel : MonoBehaviour
         if (PerformSuspensionRaycast(rayOrigin, rayDirection, out RaycastHit hit))
         {
             float springLen = hit.distance - (tireD / 2f);
-            Color springColor = Color.Lerp(Color.red, Color.green, springLen / suspRL);
+            Color springColor = Color.Lerp(Color.red, Color.yellow, springLen / suspRL);
             Debug.DrawLine(rayOrigin, hit.point, springColor);
         }
         else
         {
-            Debug.DrawLine(rayOrigin, rayOrigin + rayDirection * (suspRL + (tireD / 2f)), Color.yellow);
+            Debug.DrawLine(rayOrigin, rayOrigin + rayDirection * (suspRL + (tireD / 2f)), Color.red);
         }
     }
 
@@ -183,8 +183,7 @@ public class BSWheel : MonoBehaviour
     /// <summary>
     /// Update and apply tire forces to carRB at the tire contact point with the ground
     /// </summary>
-    /// <param name="load">The force being supported by the wheel</param>
-    public void UpdateTireForces(float load)
+    public void UpdateTireForces()
     {
         if (!isGrounded) return;
 
@@ -192,6 +191,7 @@ public class BSWheel : MonoBehaviour
         wheelVelocity = carRB.GetPointVelocity(csRolling.position);
         float lateralVelocity = Vector3.Dot(wheelVelocity, lateralDir);
         float lateralFrictionCoefficient = 0.9f;
+        float load = suspForce.magnitude;
 
         Vector3 lateralForce = -lateralDir * lateralVelocity * lateralFrictionCoefficient * load;
         lateralForce = Vector3.ProjectOnPlane(lateralForce, contactNormal);
@@ -204,7 +204,7 @@ public class BSWheel : MonoBehaviour
 
         carRB.AddForceAtPosition(lateralForce, contactPoint);
 
-        Debug.DrawRay(contactPoint, lateralForce / carRB.mass, Color.blue);
+        Debug.DrawRay(contactPoint, lateralForce / carRB.mass, Color.red);
     }
 
     
@@ -249,8 +249,8 @@ public class BSWheel : MonoBehaviour
         Vector3 force = csRolling.right * magnitude;
         force = Vector3.ProjectOnPlane(force, contactNormal);
         Vector3 position = csRolling.position;
-        carRB.AddForceAtPosition(force, position);
-        Debug.DrawRay(position, force/carRB.mass, Color.magenta);
+        carRB.AddForceAtPosition(force, csRolling.position);
+        Debug.DrawRay(position, force/carRB.mass, Color.blue);
     }
 
 
@@ -270,8 +270,8 @@ public class BSWheel : MonoBehaviour
         float magnitude = -input * maxBrakeForce;
         Vector3 force = csWheel.right * magnitude;
         force = Vector3.ProjectOnPlane(force, contactNormal);
-        Vector3 position = csWheel.position + suspDirection * currSuspLength;
-        carRB.AddForceAtPosition(force, position);
+        Vector3 position = csRolling.position;
+        carRB.AddForceAtPosition(force, csRolling.position);
         Debug.DrawRay(position, force/carRB.mass, Color.yellow);
     }
 

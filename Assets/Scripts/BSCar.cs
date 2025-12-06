@@ -36,8 +36,6 @@ public class BSCar : MonoBehaviour
     private Rigidbody carRB;
     private GameObject body;
     private BSWheel[] wheels;
-    private float[] wheelLoads;
-    private float[] suspensionForces;
 
 
     void Start()
@@ -68,8 +66,6 @@ public class BSCar : MonoBehaviour
     void InitWheels()
     {
         wheels = new BSWheel[4];
-        wheelLoads = new float[4];
-        suspensionForces = new float[4];
 
         for (int i = 0; i < wheels.Length; i++)
         {
@@ -103,9 +99,8 @@ public class BSCar : MonoBehaviour
         for (int i = 0; i < wheels.Length; i++) 
             wheels[i].UpdateSuspensionForces();
         
-        UpdateWheelLoads();
         for (int i = 0; i < wheels.Length; i++)
-            wheels[i].UpdateTireForces(wheelLoads[i]);
+            wheels[i].UpdateTireForces();
 
         if (isRenderSuspension)
             for (int i = 0; i < wheels.Length; i++) 
@@ -143,28 +138,6 @@ public class BSCar : MonoBehaviour
         }
     }
     
-
-    private void UpdateWheelLoads()
-    {
-        float totalLoad = carRB.mass * Physics.gravity.magnitude;
-        float totalSuspensionForce = 0f;
-
-        for (int i = 0; i < wheels.Length; i++)
-        {
-            suspensionForces[i] = wheels[i].GetSuspensionForce().magnitude;
-            if (wheels[i].IsGrounded())
-                totalSuspensionForce += suspensionForces[i];
-        }
-
-        for (int i = 0; i < wheels.Length; i++)
-        {
-            if (wheels[i].IsGrounded() && totalSuspensionForce > 0f)
-                wheelLoads[i] = (suspensionForces[i] / totalSuspensionForce) * totalLoad;
-            else
-                wheelLoads[i] = 0f;
-        }
-    }
-
 
     private bool IsFrontWheel(int wheel_i)
     {
