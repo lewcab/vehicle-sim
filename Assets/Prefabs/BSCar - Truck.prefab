@@ -146,7 +146,7 @@ MonoBehaviour:
   isLogInputs: 0
   isRenderSuspension: 1
   isKeyboardControl: 0
-  carShellPrefab: {fileID: 2215928548825413139, guid: 6ad7f87f16fa88c48bce72470208491e, type: 3}
+  carShellPrefab: {fileID: 2215928548825413139, guid: 8eaa9a3e3de0a0b49b8d3b37136ad8a8, type: 3}
   wheelPrefab: {fileID: 698487993823452970, guid: a051f801fa1d0554387f87737139a6f0, type: 3}
   wheelbase: 2.58
   track: 1.54
