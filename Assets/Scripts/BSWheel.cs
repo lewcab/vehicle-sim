@@ -145,13 +145,13 @@ public class BSWheel : MonoBehaviour
 
             currSuspLength = hit.distance - (tireD / 2f);
             float compression = Mathf.Clamp(suspRL - currSuspLength, 0, suspRL);
-            float suspSpeed = (prevSuspLength - currSuspLength) / Time.fixedDeltaTime;
+            float suspSpeed = (currSuspLength - prevSuspLength) / Time.fixedDeltaTime;
             prevSuspLength = currSuspLength;
             contactPoint = hit.point;
             contactNormal = hit.normal;
 
-            Vector3 springForce = compression * suspK * contactNormal;
-            Vector3 dampingForce = suspD * suspSpeed * contactNormal;
+            Vector3 springForce = suspK * compression * contactNormal;
+            Vector3 dampingForce = -suspD * suspSpeed * contactNormal;
 
             suspForce = springForce + dampingForce;
             carRB.AddForceAtPosition(suspForce, rayOrigin, ForceMode.Force);
@@ -253,7 +253,9 @@ public class BSWheel : MonoBehaviour
     /// </summary>
     /// <param name="input">Trigger input in range [0, 1]</param>
     /// <param name="driveType">The drive type of the car (FWD, RWD, AWD)</param>
-    public void Throttle(float input, BSCar.DriveType driveType)
+    /// <param name="maxForce">The maximum force applied by the wheel</param>
+    /// <param name="topSpeed">The maximum speed of the car in km/h</param>
+    public void Throttle(float input, BSCar.DriveType driveType, float maxForce, float topSpeed)
     {
         if (
             driveType == BSCar.DriveType.FWD && !isFront ||
@@ -261,14 +263,16 @@ public class BSWheel : MonoBehaviour
             !isGrounded
         ) return;
 
-        float maxForce = 8000f;
+        float currentSpeed = carRB.velocity.magnitude;
+
+        if (currentSpeed >= topSpeed / 3.6f) return;
 
         float magnitude = input * maxForce;
         Vector3 force = csRolling.right * magnitude;
         force = Vector3.ProjectOnPlane(force, contactNormal);
         Vector3 position = csRolling.position;
         carRB.AddForceAtPosition(force, csRolling.position);
-        Debug.DrawRay(position, force/carRB.mass, Color.blue);
+        Debug.DrawRay(position, force / carRB.mass, Color.blue);
     }
 
 
