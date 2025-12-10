@@ -8,7 +8,6 @@ public class BSCar : MonoBehaviour
 {
     // Debugging
     public bool isLogInputs;
-    public bool isRenderSuspension;
     public bool isKeyboardControl;
 
     // Prefabs and Visual Components
@@ -20,6 +19,7 @@ public class BSCar : MonoBehaviour
     public float track;
     public float carWeight;
     public float maxDriveForce;
+    public float maxBrakeForce;
     public float topSpeed;
     public enum DriveType { RWD, FWD, AWD }
     public DriveType driveType;
@@ -85,6 +85,7 @@ public class BSCar : MonoBehaviour
         body.transform.SetParent(car, false);
         body.transform.localScale = new(wheelbase, bodyThickness, track);
         body.transform.localPosition = new Vector3(0f, (bodyThickness/2) - suspensionDepth, 0f);
+        body.layer = LayerMask.NameToLayer("Ignore Raycast");
 
         // Add Rigidbody to the car body
         carRB = car.gameObject.AddComponent<Rigidbody>();
@@ -138,10 +139,6 @@ public class BSCar : MonoBehaviour
         HandleInput();
         foreach (BSWheel w in wheels) w.UpdateSuspensionForces();
         foreach (BSWheel w in wheels) w.UpdateTireForces();
-
-        if (isRenderSuspension)
-            for (int i = 0; i < wheels.Length; i++) 
-                wheels[i].RenderSuspension();
     }
 
 
@@ -174,7 +171,7 @@ public class BSCar : MonoBehaviour
         {
             wheels[i].Steer(steerInput, steeringAngle);
             wheels[i].Throttle(throttleInput, driveType, maxDriveForce, topSpeed);
-            wheels[i].Brake(brakeInput);
+            wheels[i].Brake(brakeInput, maxBrakeForce);
         }
     }
     
